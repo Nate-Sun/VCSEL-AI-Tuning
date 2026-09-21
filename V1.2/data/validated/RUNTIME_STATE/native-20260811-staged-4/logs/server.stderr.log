@@ -1,0 +1,40 @@
+INFO:     Started server process [71096]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8769 (Press CTRL+C to quit)
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "C:\Users\NateS\AppData\Local\Programs\Python\Python313\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\NateS\AppData\Local\Programs\Python\Python313\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NateS\Documents\VCSEL\.worktrees\v1.2-native-pilot-fast24-isolation\src\vcsel_ai_tuning\hardware\live_dca_isolation.py", line 215, in _live_dca_worker
+    gateway._capture_dca(
+    ~~~~~~~~~~~~~~~~~~~~^
+        session,
+        ^^^^^^^^
+        raw_responses,
+        ^^^^^^^^^^^^^^
+        lambda: deadline - time.monotonic(),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\NateS\Documents\VCSEL\.worktrees\v1.2-native-pilot-fast24-isolation\src\vcsel_ai_tuning\v1_1\read_only_runtime.py", line 751, in _capture_dca
+    normalize_measurement(tdecq_row, "TDECQ")
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\NateS\Documents\VCSEL\.worktrees\v1.2-native-pilot-fast24-isolation\src\vcsel_ai_tuning\v1_1\read_only_runtime.py", line 698, in normalize_measurement
+    value = _finite_result_number(row.current, f"{label} Current")
+  File "C:\Users\NateS\Documents\VCSEL\.worktrees\v1.2-native-pilot-fast24-isolation\src\vcsel_ai_tuning\v1_1\read_only_runtime.py", line 239, in _finite_result_number
+    raise ReadOnlyPreflightError(
+        f"{label} is invalid or a FlexDCA placeholder: {value!r}"
+    )
+vcsel_ai_tuning.v1_1.errors.ReadOnlyPreflightError: TDECQ Current is invalid or a FlexDCA placeholder: '9.91E+37'
+FastAPI exited with code -1.
+ËùÔÚÎ»ÖÃ C:\Users\NateS\Documents\VCSEL\.worktrees\v1.2-native-pilot-fast24-isolation\start-v1.1.ps1:324 ×Ö·û: 9
++         throw "FastAPI exited with code $($ServerProcess.ExitCode)."
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (FastAPI exited with code -1.:String) [], RuntimeException
+    + FullyQualifiedErrorId : FastAPI exited with code -1.
+ 

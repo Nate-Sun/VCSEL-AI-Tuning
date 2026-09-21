@@ -1,0 +1,33 @@
+{"kind":"scenario","campaign_id":"hierarchical-replay-1","initial_ibias_dac":69,"initial_fir_taps":[-1,9,-28,104,-8,1,-3],"full_fir_target":{"taps":[1,9,-28,104,-8,1,-3],"upper_nlc":6,"lower_nlc":6},"direct_fir_ibias_dac":73,"expected_outcome":"SUCCESS"}
+{"kind":"suggestion","stage":"I2C_SCREENING","candidate_id":"screening-direction","requested":{"ibias_dac":69},"reason":"fixed screening direction"}
+{"kind":"suggestion","stage":"I2C_COARSE","candidate_id":"coarse-gate","requested":{"ibias_dac":71},"reason":"fixed coarse candidate"}
+{"kind":"stop","stage":"I2C_COARSE","reason":"coarse observation delivered"}
+{"kind":"suggestion","stage":"I2C_FINE","candidate_id":"fine-improvement","requested":{"ibias_dac":72},"reason":"fixed constrained improvement"}
+{"kind":"stop","stage":"I2C_FINE","reason":"fine observation delivered"}
+{"kind":"suggestion","stage":"I2C_RETUNE","candidate_id":"fir-formula-direct-inner-retune","requested":{"ibias_dac":73},"reason":"retune direct formula FIR"}
+{"kind":"stop","stage":"I2C_RETUNE","reason":"direct FIR retune observation delivered"}
+{"kind":"suggestion","stage":"I2C_RETUNE","candidate_id":"final-retune","requested":{"ibias_dac":74},"reason":"fixed final retune"}
+{"kind":"stop","stage":"I2C_RETUNE","reason":"retune observation delivered"}
+{"kind":"measurement","stage":"BASELINE_MEASUREMENT","label":"baseline-1","er_db":3.1,"er_status":"CORR","tdecq_db":2.5,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"BASELINE_MEASUREMENT","label":"baseline-2","er_db":3.1,"er_status":"CORR","tdecq_db":2.51,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"BASELINE_MEASUREMENT","label":"baseline-3","er_db":3.1,"er_status":"CORR","tdecq_db":2.49,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"BASELINE_MEASUREMENT","label":"baseline-4","er_db":3.1,"er_status":"CORR","tdecq_db":2.5,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"BASELINE_MEASUREMENT","label":"baseline-5","er_db":3.1,"er_status":"CORR","tdecq_db":2.5,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_SCREENING","label":"screening-direction","er_db":3.0,"er_status":"CORR","tdecq_db":2.7,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_COARSE","label":"coarse-tdecq-invalid","er_db":3.0,"er_status":"CORR","tdecq_db":null,"tdecq_status":"INV","tdecq_invalid_reason":"instrument returned INV"}
+{"kind":"measurement","stage":"I2C_COARSE","label":"coarse-corr-1","er_db":3.1,"er_status":"CORR","tdecq_db":2.6,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_COARSE","label":"coarse-corr-2","er_db":3.1,"er_status":"CORR","tdecq_db":2.55,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_FINE","label":"fine-candidate","er_db":3.2,"er_status":"CORR","tdecq_db":2.2,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_FINE","label":"fine-confirm-1","er_db":3.2,"er_status":"CORR","tdecq_db":2.2,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_FINE","label":"fine-confirm-2","er_db":3.2,"er_status":"CORR","tdecq_db":2.21,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_FINE","label":"fine-confirm-3","er_db":3.2,"er_status":"CORR","tdecq_db":2.19,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_RETUNE","label":"fir-formula-direct-inner-retune","er_db":3.2,"er_status":"CORR","tdecq_db":2.15,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"FIR_APPLY","label":"fir-formula-direct-confirm-1","er_db":3.2,"er_status":"CORR","tdecq_db":2.1,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"FIR_APPLY","label":"fir-formula-direct-confirm-2","er_db":3.2,"er_status":"CORR","tdecq_db":2.1,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"FIR_APPLY","label":"fir-formula-direct-confirm-3","er_db":3.2,"er_status":"CORR","tdecq_db":2.1,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"I2C_RETUNE","label":"final-retune","er_db":3.2,"er_status":"CORR","tdecq_db":2.05,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"FINAL_VERIFICATION","label":"final-1","er_db":3.2,"er_status":"CORR","tdecq_db":2.0,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"FINAL_VERIFICATION","label":"final-2","er_db":3.2,"er_status":"CORR","tdecq_db":2.01,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"FINAL_VERIFICATION","label":"final-3","er_db":3.2,"er_status":"CORR","tdecq_db":1.99,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"FINAL_VERIFICATION","label":"final-4","er_db":3.2,"er_status":"CORR","tdecq_db":2.0,"tdecq_status":"CORR"}
+{"kind":"measurement","stage":"FINAL_VERIFICATION","label":"final-5","er_db":3.2,"er_status":"CORR","tdecq_db":2.0,"tdecq_status":"CORR"}

@@ -1,0 +1,1230 @@
+{
+  "status": "PASSED",
+  "started_at_utc": "2026-08-11T13:50:13.903951+00:00",
+  "requested_duration_seconds": 7200.0,
+  "campaigns": [
+    {
+      "task_id": "native-v12-soak2hr2-20260811T135015Z-001",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 27,
+          "PARTIAL": 2
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.3314086999744,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T135015Z-001:00000017:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 73,
+          "res_bw": 0,
+          "res_gain": 4,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "5d6ab65e4d44531475c3ce611cf30ca69347abd8d9804ef11b7056e833e8b817",
+        "result": {
+          "er_db": 2.632,
+          "er_status": "CORR",
+          "tdecq_db": 2.46,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T13:53:26.975377Z"
+      },
+      "post_b0_hash": "7858b986b52229efe9bb68d39b70fe488bbb0930023264f83409f5797813c7bb"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T135620Z-002",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 24,
+          "PARTIAL": 5
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 366.7837765000295,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T135620Z-002:00000012:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 72,
+          "res_bw": 0,
+          "res_gain": 5,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "17d661ae59f719748e50df5c9ef3723f311d5bef46439ce240842b4be1f4e9a0",
+        "result": {
+          "er_db": 2.703,
+          "er_status": "CORR",
+          "tdecq_db": 2.41,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T13:58:41.992804Z"
+      },
+      "post_b0_hash": "d9833a42a8cac52cbf0715c3d5177f36c0b42a23fd9d5f2730d9180db2fb957a"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T140231Z-003",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 26,
+          "PARTIAL": 3
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.68861860001925,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T140231Z-003:00000011:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 72,
+          "res_bw": 0,
+          "res_gain": 4,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "63f24c9c0dc087eb955638bf25aeac7f47bb5fdbdf11e1f115901b70500ae1d7",
+        "result": {
+          "er_db": 2.661,
+          "er_status": "CORR",
+          "tdecq_db": 2.37,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:04:38.402589Z"
+      },
+      "post_b0_hash": "368f0f43ef030c5e70730164fdc46d6e3f438b177864654930212c32ba0a3634"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T140837Z-004",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 28,
+          "PARTIAL": 1
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.4845067000133,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T140837Z-004:00000029:final_verification",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 71,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "8d3d776c0deccb71a49cdcd94e9a7dbebea2c7c4d4931657dab8b1fb27e6ddeb",
+        "result": {
+          "er_db": 2.633,
+          "er_status": "CORR",
+          "tdecq_db": 2.46,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:14:40.574450Z"
+      },
+      "post_b0_hash": "3d14ab271c76f06fc0651824973acd5a9deb85f7a7eaf0f3b87061f5cdb1f145"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T141443Z-005",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 27,
+          "PARTIAL": 2
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.35590769996634,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T141443Z-005:00000015:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 71,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "7d1ad9c1028a7882fb8292f3ce0e0e9285374e46cba8000717eeb0b2de49269e",
+        "result": {
+          "er_db": 2.634,
+          "er_status": "CORR",
+          "tdecq_db": 2.42,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:17:31.011382Z"
+      },
+      "post_b0_hash": "6b0d570d47ae01f20280195b84d64e6fd994875e3d1f71eae12bb87db5f35dd0"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T142047Z-006",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 27,
+          "PARTIAL": 2
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 366.45986909995554,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T142047Z-006:00000012:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 71,
+          "res_bw": 0,
+          "res_gain": 4,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "1f1580d5856a34a62dbb6cd24894bf48a75fd6fef95e57bc6eaf8dfa85b7c914",
+        "result": {
+          "er_db": 2.687,
+          "er_status": "CORR",
+          "tdecq_db": 2.42,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:23:08.074620Z"
+      },
+      "post_b0_hash": "63d7490151b42f873de70d824ad79caa930b09b931af2606968c66ebc6d3be59"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T142658Z-007",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 26,
+          "PARTIAL": 3
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 366.7794991999981,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T142658Z-007:00000017:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 71,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "192fb440edf045bd52eefda77d45bb66c3dd065c3f9f9009d56e62e3e9f3ff61",
+        "result": {
+          "er_db": 2.632,
+          "er_status": "CORR",
+          "tdecq_db": 2.34,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:30:08.258048Z"
+      },
+      "post_b0_hash": "5bcd363423e05ad7b7995b170cb84c24c337ae4cac9d098a009cbcbd4193355d"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T143309Z-008",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 28,
+          "PARTIAL": 1
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.53323449997697,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T143309Z-008:00000016:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 72,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "902f6e40d5de39043860c4b32ea4922ad457bbc6ae957097b59699b32a616d10",
+        "result": {
+          "er_db": 2.612,
+          "er_status": "CORR",
+          "tdecq_db": 2.4,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:36:10.723370Z"
+      },
+      "post_b0_hash": "163e29f66f0a2f5d79bc946be8127fbb1e39b273948c0c7231d53699fda01242"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T143915Z-009",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 25,
+          "PARTIAL": 4
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.0970420999802,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T143915Z-009:00000029:final_verification",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 71,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "ffdb470dd6ddc468656c5752a386a95bdc49981926b0d3b78a9a9ec3a98ffde2",
+        "result": {
+          "er_db": 2.634,
+          "er_status": "CORR",
+          "tdecq_db": 2.43,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:45:17.227543Z"
+      },
+      "post_b0_hash": "aa44c50f84c40b6325ea7b1f5817697d688179d3e279fbf6afe0daad47cdcab0"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T144519Z-010",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 26,
+          "PARTIAL": 3
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 366.8118195999996,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T144519Z-010:00000009:i2c_coarse",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 72,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "015686db55a80513299f73d70297b2899ad2d9531e44997621f7c27e71b72643",
+        "result": {
+          "er_db": 2.619,
+          "er_status": "CORR",
+          "tdecq_db": 2.43,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:47:08.991630Z"
+      },
+      "post_b0_hash": "5d99983fce2d03009b482cd596aa7bc477b55d5fe613a3dade1bde1c51b6f607"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T145131Z-011",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 27,
+          "PARTIAL": 2
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.7509568000096,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T145131Z-011:00000013:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 70,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "e87f0dbea429058915808151b870949f506948b5b6589adb04905632533f7a36",
+        "result": {
+          "er_db": 2.675,
+          "er_status": "CORR",
+          "tdecq_db": 2.51,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T14:54:00.361795Z"
+      },
+      "post_b0_hash": "559742c477c6d9c55377d836c6d90f6a552cc8e173cb9f575a52b3e0149872a5"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T145736Z-012",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 26,
+          "PARTIAL": 3
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 365.90474800002994,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T145736Z-012:00000029:final_verification",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 70,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "95db602957d4a159be9f3913def362330f176b2898b416e1c1a5e9fac6c95b75",
+        "result": {
+          "er_db": 2.679,
+          "er_status": "CORR",
+          "tdecq_db": 2.49,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:03:35.511993Z"
+      },
+      "post_b0_hash": "c83163ffc204e8d31ca14b0295cdf89f223bf9a9e5259e4f735435b91b72e611"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T150347Z-013",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 25,
+          "PARTIAL": 4
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.47264679998625,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T150347Z-013:00000022:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 70,
+          "res_bw": 0,
+          "res_gain": 5,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "98016b9b7ecd207d5cb550efeeeb33f5b2ae0973473625358b7fde58c15fa3a3",
+        "result": {
+          "er_db": 2.793,
+          "er_status": "CORR",
+          "tdecq_db": 2.63,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:07:45.829887Z"
+      },
+      "post_b0_hash": "d1252dde72b054b24ad4996d7e09f1ae37247d408202760ec56cad09945db46b"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T150951Z-014",
+      "state": "COMPLETED_NO_IMPROVEMENT",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 20,
+          "PARTIAL": 9
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 361.43169900000794,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T150951Z-014:00000013:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 72,
+          "res_bw": 0,
+          "res_gain": 2,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "ce63326787a7afb55b2e9b5bfac477b44573ccfc9c098978e66e0c3bab7c1c31",
+        "result": {
+          "er_db": 2.569,
+          "er_status": "CORR",
+          "tdecq_db": 2.64,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:12:21.734754Z"
+      },
+      "post_b0_hash": "ee3a487954b9b0f6ceeb9d1a7c15642ca0b0b46f3b89d15ac33a1661459199eb"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T151557Z-015",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 29
+        }
+      },
+      "final_dataset_status": "SUCCESS",
+      "elapsed_seconds": 361.71944590000203,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T151557Z-015:00000026:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 69,
+          "res_bw": 0,
+          "res_gain": 3,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "69f76e10a68347295a94da9f0599e51a85ec5be108ea02b531b6b24f0103773d",
+        "result": {
+          "er_db": 2.715,
+          "er_status": "CORR",
+          "tdecq_db": 2.6,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:20:42.204713Z"
+      },
+      "post_b0_hash": "423af0838952c0ae9fb2d1433ba5728354adf2dadbe49cb2e885486888a9404a"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T152203Z-016",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 24,
+          "PARTIAL": 5
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 356.15659349999623,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T152203Z-016:00000022:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 70,
+          "res_bw": 0,
+          "res_gain": 4,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "b308298d8768e410a6f057908cbeabc07333a69c0806a8db45671912075a6693",
+        "result": {
+          "er_db": 2.745,
+          "er_status": "CORR",
+          "tdecq_db": 2.59,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:26:01.350663Z"
+      },
+      "post_b0_hash": "b5d1cc59a2945c04b70b4810ea5f92be006031ff6c5fd2cbf4a60655d598cc73"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T152804Z-017",
+      "state": "COMPLETED_NO_IMPROVEMENT",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 28,
+          "PARTIAL": 1
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 356.6110558999935,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T152804Z-017:00000005:i2c_coarse",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 70,
+          "res_bw": 0,
+          "res_gain": 6,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "e596513a82366cc6087e8049bf5a842448801daf99489615f0a43ed7697c747c",
+        "result": {
+          "er_db": 2.845,
+          "er_status": "CORR",
+          "tdecq_db": 2.7,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:29:09.336270Z"
+      },
+      "post_b0_hash": "0493a42f1d9ce284b61e51121e28ccbb21c7340172216d44b636fd752a74202e"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T153404Z-018",
+      "state": "COMPLETED_NO_IMPROVEMENT",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 26,
+          "PARTIAL": 3
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 362.03294249996543,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T153404Z-018:00000007:i2c_coarse",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 72,
+          "res_bw": 0,
+          "res_gain": 4,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "7cbc6c886d5ba06dc15c993ecc985e5d1e901b7755f62b25520eebf37061cb0f",
+        "result": {
+          "er_db": 2.682,
+          "er_status": "CORR",
+          "tdecq_db": 2.62,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:35:32.103667Z"
+      },
+      "post_b0_hash": "d5c0c38df4744763cbd338f23a4cf8dac865cacd1639e5fb85cb1f3fd837134f"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T154010Z-019",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 25,
+          "PARTIAL": 4
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 356.5786601,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T154010Z-019:00000022:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 72,
+          "res_bw": 0,
+          "res_gain": 5,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "a6a79c41da169618c0679286f20458edfddb9e0470769f0d9dbaf2fd8191a78b",
+        "result": {
+          "er_db": 2.733,
+          "er_status": "CORR",
+          "tdecq_db": 2.49,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:44:07.413046Z"
+      },
+      "post_b0_hash": "386412b2ab20c9510baaabb6d754aa36e5cb5864ddb8c3635790f47a59440d51"
+    },
+    {
+      "task_id": "native-v12-soak2hr2-20260811T154611Z-020",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 23,
+          "PARTIAL": 6
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 356.24705060000997,
+      "best": {
+        "observation_id": "native-v12-soak2hr2-20260811T154611Z-020:00000029:final_verification",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 72,
+          "res_bw": 0,
+          "res_gain": 5,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "0f83b15149c21ba248f074135ad43fec877da77c51e5c02cbd2270a959b2a44e",
+        "result": {
+          "er_db": 2.714,
+          "er_status": "CORR",
+          "tdecq_db": 2.52,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T15:52:06.871273Z"
+      },
+      "post_b0_hash": "a4e0e014047a061e09b50f5c8d68412b07abda80619f0f8e990a23e611fa2bbd"
+    }
+  ],
+  "finished_at_utc": "2026-08-11T15:52:12.450948+00:00",
+  "elapsed_seconds": 7318.547268999973,
+  "campaign_count": 20,
+  "final_b0_hash": "3b840365c1a69a88c5f998614c71f80b3f423c31708ca726549904a7144ed563"
+}

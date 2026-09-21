@@ -1,0 +1,11 @@
+# Deterministic software-only runtime. No VISA, serial, or BERT endpoint exists.
+mode: FAKE
+api:
+  host: 127.0.0.1
+  port: 8000
+storage:
+  sqlite_path: ../../state/ai_tuning/campaigns.sqlite3
+  artifact_root: ../../artifacts/ai_tuning
+b0_path: b0.yaml
+measurement_timeout_s: 30.0
+worker_count: 2

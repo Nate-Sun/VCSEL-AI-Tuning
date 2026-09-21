@@ -1,0 +1,53 @@
+mode: LIVE
+result_dir: artifacts/v2.1/continuous/controller
+live:
+  runtime_config: configs/ai_tuning/runtime.v2_1.continuous.live.yaml
+  campaign_id: REPLACE_WITH_FRESH_CAMPAIGN_ID
+  kimi_model: kimi-k3
+  parameter_policy:
+    version: i2c-restricted-v1
+    max_changed_parameters: 3
+    rules:
+      ibias_dac: {minimum: 60, maximum: 80, max_step: 10}
+      efin_cur: {minimum: 10, maximum: 15, max_step: 3}
+      vga_cur: {minimum: 10, maximum: 15, max_step: 3}
+      eq: {minimum: 16, maximum: 25, max_step: 3}
+      res_gain: {minimum: 0, maximum: 10, max_step: 3}
+      res_bw: {minimum: 0, maximum: 5, max_step: 1}
+      gain_ctrl: {minimum: 0, maximum: 10, max_step: 3}
+      vbias_ref: {minimum: 10, maximum: 15, max_step: 3}
+      vref: {minimum: 10, maximum: 15, max_step: 3}
+  instruction: |-
+    This is a scripted live demonstration. Treat the left raw PAM4 eye as the
+    primary signal and the right TDECQ-equalized view only as supporting evidence.
+    Assess every eye truthfully. Only real DCA measurements may determine TDECQ
+    and ER; never invent TDECQ, ER, improvement, or target success. Each request
+    uses structured target.tdecq_db_lt only as the stop goal and round.maximum as
+    the actual budget. An exploratory round may be worse than the current best.
+    Each request includes SCRIPTED_REQUIRED_PARAMS for the current hardware round.
+    Return PROPOSE with requested_params exactly equal to that sparse absolute
+    mapping. Do not choose a different point, stop early, or reuse values from
+    memory. The local controller enforces the schedule, policy limits, verified
+    readback, evidence persistence, and B0 recovery. Do not request FIR, BERT,
+    or NLC.
+  scripted_schedule:
+    - {ibias_dac: 66, efin_cur: 15, vga_cur: 13, eq: 18, res_gain: 6, res_bw: 0, gain_ctrl: 3, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 13, eq: 19, res_gain: 6, res_bw: 0, gain_ctrl: 4, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 13, eq: 21, res_gain: 7, res_bw: 0, gain_ctrl: 6, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 13, eq: 20, res_gain: 6, res_bw: 0, gain_ctrl: 5, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 13, eq: 21, res_gain: 8, res_bw: 0, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 22, res_gain: 8, res_bw: 1, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 20, res_gain: 9, res_bw: 1, gain_ctrl: 6, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 13, eq: 21, res_gain: 9, res_bw: 1, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 13, eq: 22, res_gain: 9, res_bw: 0, gain_ctrl: 5, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 21, res_gain: 6, res_bw: 0, gain_ctrl: 5, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 20, res_gain: 9, res_bw: 0, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 13, eq: 21, res_gain: 9, res_bw: 1, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 13, eq: 19, res_gain: 8, res_bw: 1, gain_ctrl: 6, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 20, res_gain: 8, res_bw: 1, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 22, res_gain: 7, res_bw: 1, gain_ctrl: 5, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 21, res_gain: 9, res_bw: 1, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 11, eq: 20, res_gain: 9, res_bw: 0, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 21, res_gain: 9, res_bw: 1, gain_ctrl: 7, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 22, res_gain: 8, res_bw: 1, gain_ctrl: 6, vbias_ref: 15, vref: 15}
+    - {ibias_dac: 70, efin_cur: 15, vga_cur: 12, eq: 20, res_gain: 9, res_bw: 1, gain_ctrl: 7, vbias_ref: 15, vref: 15}

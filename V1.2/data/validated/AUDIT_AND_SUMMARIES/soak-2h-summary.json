@@ -1,0 +1,71 @@
+{
+  "status": "FAILED",
+  "started_at_utc": "2026-08-11T13:30:52.887140+00:00",
+  "requested_duration_seconds": 7200.0,
+  "campaigns": [
+    {
+      "task_id": "native-v12-soak2h-20260811T133054Z-001",
+      "state": "COMPLETED",
+      "observations": 29,
+      "phases": {
+        "PILOT_3": 3,
+        "B0": 1,
+        "I2C_COARSE": 6,
+        "I2C_FINE": 16,
+        "FIR_FIRST": 1,
+        "FIR_ITERATIVE": 1,
+        "FINAL_VERIFICATION": 1
+      },
+      "dataset": {
+        "records": 29,
+        "statuses": {
+          "COMPLETE": 24,
+          "PARTIAL": 5
+        }
+      },
+      "final_dataset_status": "PARTIAL",
+      "elapsed_seconds": 366.81090219999896,
+      "best": {
+        "observation_id": "native-v12-soak2h-20260811T133054Z-001:00000012:i2c_fine",
+        "i2c": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 71,
+          "res_bw": 0,
+          "res_gain": 5,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        },
+        "fir": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "upper_nlc": 6,
+        "lower_nlc": 6,
+        "pattern": "SSPRQ",
+        "bert_port": "port1",
+        "bert_channel": "0",
+        "dca_fingerprint": "779de7851c43f0e67e383728426e7ec9ba5d649ace2c7a4f3acfb94d402a3a3e",
+        "result": {
+          "er_db": 2.739,
+          "er_status": "CORR",
+          "tdecq_db": 2.44,
+          "tdecq_invalid_reason": null,
+          "tdecq_status": "CORR"
+        },
+        "updated_at": "2026-08-11T13:33:13.866838Z"
+      },
+      "post_b0_hash": "80add89ca04ba17e84cc1274be9d6ad51daa793152663a3b252a009ee43c40a1"
+    }
+  ],
+  "finished_at_utc": "2026-08-11T13:37:25.984519+00:00",
+  "elapsed_seconds": 393.097411499999,
+  "error": "RuntimeError: native-v12-soak2h-20260811T133705Z-002: terminal state FAILED"
+}

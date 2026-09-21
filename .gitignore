@@ -1,0 +1,17 @@
+# Runtime/build output only; delivered evidence is explicitly tracked.
+**/__pycache__/
+**/.pytest_cache/
+**/.venv*/
+**/node_modules/
+**/dist/
+**/*.pyc
+**/*.lock
+**/.env
+**/.env.*
+**/~$*
+*.bundle
+*.npy
+*.png
+# Small source test fixtures are allowed below.
+*.jsonl
+!**/source/tests_py/ai_tuning/fixtures/*.jsonl

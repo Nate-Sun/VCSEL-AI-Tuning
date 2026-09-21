@@ -1,0 +1,93 @@
+{
+  "error": "isolated READ_ONLY DCA capture failed",
+  "error_type": "ReadOnlyPreflightError",
+  "evidence": {
+    "durations_s": {
+      "bert": {
+        "connection_s": 0.0,
+        "query_s": 0.0
+      },
+      "dca": {
+        "connection_s": 0.0,
+        "query_s": 0.0
+      },
+      "i2c": {
+        "connection_s": 0.0,
+        "query_s": 0.0
+      }
+    },
+    "failure_context": {
+      "dca_isolation": {
+        "action": "read_only_queries",
+        "connection_state": "VERIFIED_CLOSED",
+        "er_db": null,
+        "er_status": "NOT_AVAILABLE",
+        "exitcode": 1,
+        "failed_repeat_index": 0,
+        "item_id": "snapshot-de7a0a0c40a9427eb76c08c63273d6f1",
+        "last_in_flight": null,
+        "lifecycle_events": [
+          {
+            "event": "WORKER_STARTED"
+          },
+          {
+            "event": "ROUND_STARTED",
+            "repeat_index": 0,
+            "started_at_utc": "2026-08-11T07:13:12.294747+00:00"
+          },
+          {
+            "error": "ReadOnlyPreflightError: TDECQ Current is invalid or a FlexDCA placeholder: '9.91E+37'",
+            "event": "WORKER_FAILED"
+          }
+        ],
+        "observation_valid": false,
+        "round_index": 0,
+        "started_at_utc": "2026-08-11T07:13:12.294747+00:00",
+        "task_id": "read-only-preflight",
+        "tdecq_db": null,
+        "tdecq_status": "NOT_AVAILABLE",
+        "timeout_reason": "DCA_WORKER_FAILED",
+        "worker_alive_after_cleanup": false,
+        "worker_error": {
+          "error": "ReadOnlyPreflightError: TDECQ Current is invalid or a FlexDCA placeholder: '9.91E+37'",
+          "event": "WORKER_FAILED"
+        },
+        "worker_terminated": true
+      }
+    },
+    "fake": false,
+    "finished_at_utc": "2026-08-11T07:13:13.716628+00:00",
+    "mutation_counts": {
+      "bert_writes": 0,
+      "dca_writes": 0,
+      "i2c_page_select_writes": 0,
+      "i2c_tunable_register_writes": 0
+    },
+    "normalized": {},
+    "raw_responses": {
+      "bert": {},
+      "dca": {},
+      "i2c": {}
+    },
+    "started_at_utc": "2026-08-11T07:13:12.278348+00:00",
+    "targets": {
+      "bert": {
+        "channel": "0",
+        "host": "192.168.3.2",
+        "local_ip": "192.168.3.1",
+        "mode": "PAM4",
+        "port": "port1",
+        "udp_port": 9000
+      },
+      "dca_visa": "TCPIP0::Nate-Rog::hislip0,4880::INSTR",
+      "i2c": {
+        "address": "0xA6",
+        "baudrate": 115200,
+        "com": "COM7"
+      }
+    },
+    "timeout_s": 60.0,
+    "total_duration_s": 1.4383866999996826
+  },
+  "status": "FAILED"
+}

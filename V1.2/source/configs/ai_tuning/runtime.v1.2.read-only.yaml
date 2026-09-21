@@ -1,0 +1,23 @@
+# V1.2 real-hardware read-only runtime. Startup assembles adapters but does not
+# perform Preflight or write hardware. Operator review is still required.
+mode: READ_ONLY
+api:
+  host: 127.0.0.1
+  port: 8000
+storage:
+  sqlite_path: ../../state/v1.2/campaigns.sqlite3
+  artifact_root: ../../artifacts/v1.2
+b0_path: b0.yaml
+measurement_timeout_s: 180.0
+worker_count: 1
+hardware:
+  driver_profile: ../hardware/vcsel_lab_live.yaml
+  dca_visa_resource: TCPIP0::Nate-Rog::hislip0,4880::INSTR
+  i2c_com_port: COM7
+  i2c_address: 0xA6
+  bert_host: 192.168.3.2
+  bert_port: 9000
+  resource_ids:
+    - DCA-N1010A-CHAN1A
+    - I2C-PHVD1124-COM7-0xA6
+    - BERT-192.168.3.2-PORT1-CH0

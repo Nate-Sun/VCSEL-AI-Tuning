@@ -1,0 +1,200 @@
+{
+  "b0": {
+    "b0_id": "b0-live",
+    "captured_at": "2026-07-27T12:00:00+00:00",
+    "channel_mapping": {
+      "bert_channel": "0",
+      "bert_port": "port1",
+      "dca_outer_er_source": "CHAN1A",
+      "dca_tdecq_equalizer_function": 1,
+      "dca_tdecq_source": "CHAN1A",
+      "i2c_channel": 0
+    },
+    "dca_fingerprint": {
+      "configuration": {
+        "rate": "53.125 GBd",
+        "tdecq_equalizer_function": "FUNC1"
+      },
+      "identity": "KEYSIGHT",
+      "measurement_sources": {
+        "outer_er": "CHAN1A",
+        "tdecq": "CHAN1A"
+      }
+    },
+    "fir": {
+      "channel": "0",
+      "lower_nlc": 6,
+      "pattern": "SSPRQ",
+      "port": "port1",
+      "taps": [
+        0,
+        9,
+        -28,
+        104,
+        -8,
+        1,
+        -3
+      ],
+      "upper_nlc": 6
+    },
+    "hardware_identities": [
+      {
+        "identity": "VIT",
+        "kind": "bert",
+        "resource": "192.168.3.2:9000"
+      },
+      {
+        "identity": "KEYSIGHT",
+        "kind": "dca",
+        "resource": "hislip0"
+      },
+      {
+        "identity": "0x52:0x00",
+        "kind": "i2c",
+        "resource": "COM7"
+      }
+    ],
+    "i2c_fields": {
+      "eq": 20
+    },
+    "i2c_raw_registers": [
+      [
+        8198,
+        20
+      ]
+    ],
+    "version": 1
+  },
+  "b0_hash": "ad2dfa2dfdd8f4cdd76ddafac52f0e97bbfeb53b49738805c39549caa2692ae6",
+  "evidence": {
+    "fake": true,
+    "mutation_counts": {
+      "bert_writes": 0,
+      "dca_writes": 0,
+      "i2c_page_select_writes": 0,
+      "i2c_tunable_register_writes": 0
+    }
+  },
+  "mapping": [
+    {
+      "bit_start": 0,
+      "bits": 5,
+      "channel0_address": 8198,
+      "channel_stride": 256,
+      "current_value": 20,
+      "encoding_max": 31,
+      "encoding_min": 0,
+      "name": "eq",
+      "reason": null,
+      "script_order": 0,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": null,
+      "bits": null,
+      "channel0_address": null,
+      "channel_stride": null,
+      "current_value": null,
+      "encoding_max": null,
+      "encoding_min": null,
+      "name": "ibias_dac",
+      "reason": "missing from Script",
+      "script_order": null,
+      "status": "UNAVAILABLE"
+    },
+    {
+      "bit_start": null,
+      "bits": null,
+      "channel0_address": null,
+      "channel_stride": null,
+      "current_value": null,
+      "encoding_max": null,
+      "encoding_min": null,
+      "name": "vref",
+      "reason": "missing from Script",
+      "script_order": null,
+      "status": "UNAVAILABLE"
+    },
+    {
+      "bit_start": null,
+      "bits": null,
+      "channel0_address": null,
+      "channel_stride": null,
+      "current_value": null,
+      "encoding_max": null,
+      "encoding_min": null,
+      "name": "vbias_ref",
+      "reason": "missing from Script",
+      "script_order": null,
+      "status": "UNAVAILABLE"
+    },
+    {
+      "bit_start": null,
+      "bits": null,
+      "channel0_address": null,
+      "channel_stride": null,
+      "current_value": null,
+      "encoding_max": null,
+      "encoding_min": null,
+      "name": "vga_cur",
+      "reason": "missing from Script",
+      "script_order": null,
+      "status": "UNAVAILABLE"
+    },
+    {
+      "bit_start": null,
+      "bits": null,
+      "channel0_address": null,
+      "channel_stride": null,
+      "current_value": null,
+      "encoding_max": null,
+      "encoding_min": null,
+      "name": "res_gain",
+      "reason": "missing from Script",
+      "script_order": null,
+      "status": "UNAVAILABLE"
+    },
+    {
+      "bit_start": null,
+      "bits": null,
+      "channel0_address": null,
+      "channel_stride": null,
+      "current_value": null,
+      "encoding_max": null,
+      "encoding_min": null,
+      "name": "res_bw",
+      "reason": "missing from Script",
+      "script_order": null,
+      "status": "UNAVAILABLE"
+    },
+    {
+      "bit_start": null,
+      "bits": null,
+      "channel0_address": null,
+      "channel_stride": null,
+      "current_value": null,
+      "encoding_max": null,
+      "encoding_min": null,
+      "name": "gain_ctrl",
+      "reason": "missing from Script",
+      "script_order": null,
+      "status": "UNAVAILABLE"
+    },
+    {
+      "bit_start": null,
+      "bits": null,
+      "channel0_address": null,
+      "channel_stride": null,
+      "current_value": null,
+      "encoding_max": null,
+      "encoding_min": null,
+      "name": "efin_cur",
+      "reason": "missing from Script",
+      "script_order": null,
+      "status": "UNAVAILABLE"
+    }
+  ],
+  "mapping_hash": "8257dd1edc75b6b931dfd77ca979d489a95f02140d75ca0cbdeecc0f69bc3252",
+  "snapshot_token": "snap-1",
+  "status": "SUCCESS"
+}

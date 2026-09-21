@@ -1,0 +1,17 @@
+baseline_id: B0
+version: 1
+pattern: SSPRQ
+fir:
+  taps: [0, 9, -28, 104, -8, 1, -3]
+  upper_nlc: 6
+  lower_nlc: 6
+i2c:
+  ibias_dac: 70
+  vref: 15
+  vbias_ref: 15
+  vga_cur: 13
+  res_gain: 6
+  res_bw: 0
+  gain_ctrl: 5
+  efin_cur: 15
+  eq: 22

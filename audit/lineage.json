@@ -1,0 +1,51 @@
+[
+  {
+    "directory": "V1.2",
+    "original_zip": "source-v1.2-native-staged-c5bcca0.zip",
+    "branch": "codex/v1.2-native-pilot-fast24-isolation",
+    "commit": "c5bcca019d987abee08c055cf1480f62eb406da7",
+    "status": "HARDWARE_TESTED_CANDIDATE"
+  },
+  {
+    "directory": "V2.0",
+    "original_zip": "source-v2.0-eb10281.zip",
+    "branch": "codex/V2.0",
+    "commit": "eb102816175cd9083d4b3d718539f24fa40bf131",
+    "status": "SOFTWARE_FOUNDATION"
+  },
+  {
+    "directory": "V2.1/continuous",
+    "original_zip": "source-v2.1-continuous-eye-optimization-bb427a2.zip",
+    "branch": "codex/v2.1-continuous-eye-optimization",
+    "commit": "bb427a2f1b1ec687f2682e1acc3cc6d87a6e88d8",
+    "status": "EXPERIMENTAL"
+  },
+  {
+    "directory": "V2.1/desktop",
+    "original_zip": "source-v2.1-continuous-eye-desktop-app-5f6b70f.zip",
+    "branch": "codex/v2.1-continuous-eye-desktop-app",
+    "commit": "5f6b70f35135256afe9c914a331fc82e89818fe6",
+    "status": "EXPERIMENTAL"
+  },
+  {
+    "directory": "V2.1/b0-70-22-fast",
+    "original_zip": "source-v2.1-continuous-eye-b0-70-22-fast-6c1a842.zip",
+    "branch": "codex/v2.1-continuous-eye-b0-70-22-fast",
+    "commit": "6c1a842f09a978d269bc77ef1c50c844a45bdfc0",
+    "status": "EXPERIMENTAL"
+  },
+  {
+    "directory": "V2.1/r46-fast",
+    "original_zip": "source-v2.1-continuous-eye-r46-fast-5a1f47d.zip",
+    "branch": "codex/v2.1-continuous-eye-r46-fast",
+    "commit": "5a1f47dc670b3fd3683662951230c459bc9b08ce",
+    "status": "EXPERIMENTAL"
+  },
+  {
+    "directory": "V2.1/kimi-live",
+    "original_zip": "source-v2.1-kimi-live-5d04fc1.zip",
+    "branch": "codex/v2.1-kimi-live",
+    "commit": "5d04fc1724b0622873990055ac6be6e1765b535d",
+    "status": "EXPERIMENTAL"
+  }
+]

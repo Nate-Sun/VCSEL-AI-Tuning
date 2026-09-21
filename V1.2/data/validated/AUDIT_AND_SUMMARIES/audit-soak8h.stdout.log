@@ -1,0 +1,19 @@
+summary_status PASSED
+elapsed_seconds 29150.480448900023
+campaigns 80
+states {'COMPLETED_NO_IMPROVEMENT': 17, 'COMPLETED': 63}
+phase_totals {'PILOT_3': 240, 'B0': 80, 'I2C_COARSE': 480, 'I2C_FINE': 1280, 'FIR_FIRST': 80, 'FIR_ITERATIVE': 80, 'FINAL_VERIFICATION': 80}
+records 2320
+dataset_statuses {'COMPLETE': 2036, 'PARTIAL': 284}
+unique_ids 2320 2320 2320
+campaign_record_counts {29: 80}
+parameter_mismatches 0
+missing_metric_keys 0
+same_acquisition {'True': 2036, 'False': 284}
+files {'raw_eye_density.npy': 2320, 'raw_eye.png': 2320, 'tdecq_equalized_eye.png': 2320}
+file_bytes 4231678960
+npy {((521, 751), 'uint32'): 2320}
+png_formats {'PNG': 4640}
+png_modes {'L': 4640}
+png_sizes {(751, 521): 4640}
+errors 0

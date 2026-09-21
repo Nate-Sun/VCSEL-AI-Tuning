@@ -1,0 +1,14 @@
+node_modules/
+**/node_modules/
+.vercel/
+*.log
+.worktrees/
+.venv-ai-tuning/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+state/*.sqlite*
+artifacts/campaigns/
+artifacts/quarantine/

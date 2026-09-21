@@ -1,0 +1,3 @@
+mode: FAKE
+max_rounds: 3
+result_dir: artifacts/continuous

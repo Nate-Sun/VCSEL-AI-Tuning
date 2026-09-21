@@ -1,0 +1,664 @@
+{
+  "b0": {
+    "b0_id": "read-only-b0-00000050",
+    "captured_at": "2026-08-11T17:13:37.037893+00:00",
+    "channel_mapping": {
+      "bert_channel": "0",
+      "bert_port": "port1",
+      "dca_outer_er_source": "CHAN1A",
+      "dca_tdecq_equalizer_function": 1,
+      "dca_tdecq_source": "FUNC1",
+      "i2c_channel": 0
+    },
+    "dca_fingerprint": {
+      "configuration": {
+        "channel": "CHAN1A",
+        "function": "1",
+        "outer_er_details": "Correct",
+        "outer_er_status": "CORR",
+        "outer_er_units": "DECIBEL",
+        "outer_er_value_db": "2.617",
+        "pattern_length": "65535",
+        "symbol_rate_baud": "53125000000",
+        "tdecq_details": "Correct",
+        "tdecq_equalizer_function": "FUNC1",
+        "tdecq_input_channel": "CHAN1A",
+        "tdecq_status": "CORR",
+        "tdecq_value_db": "2.48",
+        "trigger_ratio": "SUB4",
+        "trigger_source": "FPAN",
+        "wavelength_m": "8.5e-07"
+      },
+      "identity": "Keysight Technologies,N1010A,Nate-Rog,A.08.32.13",
+      "measurement_sources": {
+        "outer_er": "CHAN1A",
+        "tdecq": "FUNC1"
+      }
+    },
+    "fir": {
+      "channel": "0",
+      "lower_nlc": 6,
+      "pattern": "SSPRQ",
+      "port": "port1",
+      "taps": [
+        0,
+        9,
+        -28,
+        104,
+        -8,
+        1,
+        -3
+      ],
+      "upper_nlc": 6
+    },
+    "hardware_identities": [
+      {
+        "identity": "mode=PAM4 53.125 1lanePerPort;patterns=SSPRQ,SSPRQ",
+        "kind": "bert",
+        "resource": "192.168.3.2:9000/port1/0"
+      },
+      {
+        "identity": "Keysight Technologies,N1010A,Nate-Rog,A.08.32.13",
+        "kind": "dca",
+        "resource": "TCPIP0::Nate-Rog::hislip0,4880::INSTR"
+      },
+      {
+        "identity": "chip_id=0x52;revision=0x00",
+        "kind": "i2c",
+        "resource": "COM7/115200/0xA6"
+      }
+    ],
+    "i2c_fields": {
+      "efin_cur": 15,
+      "eq": 22,
+      "gain_ctrl": 5,
+      "ibias_dac": 70,
+      "res_bw": 0,
+      "res_gain": 6,
+      "vbias_ref": 15,
+      "vga_cur": 13,
+      "vref": 15
+    },
+    "i2c_raw_registers": [
+      [
+        8194,
+        70
+      ],
+      [
+        8195,
+        15
+      ],
+      [
+        8197,
+        13
+      ],
+      [
+        8198,
+        22
+      ],
+      [
+        8199,
+        6
+      ],
+      [
+        8200,
+        0
+      ],
+      [
+        8201,
+        5
+      ],
+      [
+        8202,
+        15
+      ],
+      [
+        8203,
+        15
+      ]
+    ],
+    "version": 1
+  },
+  "b0_hash": "8ce450d36bcabc8a601920bd6339ff0d3a9e868813480ba16e7e5569a43dc43c",
+  "evidence": {
+    "durations_s": {
+      "bert": {
+        "connection_s": 7.389998063445091e-05,
+        "query_s": 0.002574699989054352
+      },
+      "dca": {
+        "connection_s": 0.9078275000210851,
+        "query_s": 0.0006300000241026282
+      },
+      "i2c": {
+        "connection_s": 0.003109700046479702,
+        "query_s": 0.2888237999868579
+      }
+    },
+    "fake": false,
+    "finished_at_utc": "2026-08-11T17:13:37.038178+00:00",
+    "mutation_counts": {
+      "bert_writes": 0,
+      "dca_writes": 0,
+      "i2c_page_select_writes": 3,
+      "i2c_tunable_register_writes": 0
+    },
+    "normalized": {
+      "bert": {
+        "channel": "0",
+        "fir_taps": [
+          0,
+          9,
+          -28,
+          104,
+          -8,
+          1,
+          -3
+        ],
+        "lower_nlc": 6,
+        "mode": "PAM4 53.125 1lanePerPort",
+        "pattern_fields": [
+          "SSPRQ",
+          "SSPRQ"
+        ],
+        "port": "port1",
+        "upper_nlc": 6
+      },
+      "dca": {
+        "channel": "CHAN1A",
+        "function": 1,
+        "identity": "Keysight Technologies,N1010A,Nate-Rog,A.08.32.13",
+        "outer_er": {
+          "details": "Correct",
+          "reported_unit": null,
+          "source": "CHAN1A",
+          "statistics": {
+            "max": 2.617,
+            "min": 2.617
+          },
+          "status": "CORR",
+          "units": "DECIBEL",
+          "value": 2.617
+        },
+        "pattern_length": 65535,
+        "results_rows": [
+          {
+            "current": "1.709E+1",
+            "displayed_source": "1A",
+            "max": "1.709E+1",
+            "mean": null,
+            "min": "1.709E+1",
+            "name": "Undershoot(3.0E-3)",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "1.709E+1",
+              "Max": "1.709E+1",
+              "Min": "1.709E+1",
+              "Name": "Undershoot(3.0E-3)",
+              "Source": "1A",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "1.527E+1",
+            "displayed_source": "1A",
+            "max": "1.527E+1",
+            "mean": null,
+            "min": "1.527E+1",
+            "name": "Overshoot(3.0E-3)",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "1.527E+1",
+              "Max": "1.527E+1",
+              "Min": "1.527E+1",
+              "Name": "Overshoot(3.0E-3)",
+              "Source": "1A",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "9.60E-1",
+            "displayed_source": "1A",
+            "max": "9.60E-1",
+            "mean": null,
+            "min": "9.60E-1",
+            "name": "RLM (802.3 A_120D)",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "9.60E-1",
+              "Max": "9.60E-1",
+              "Min": "9.60E-1",
+              "Name": "RLM (802.3 A_120D)",
+              "Source": "1A",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "4.4E-1",
+            "displayed_source": "F1",
+            "max": "4.4E-1",
+            "mean": null,
+            "min": "4.4E-1",
+            "name": "Ceq",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "4.4E-1",
+              "Max": "4.4E-1",
+              "Min": "4.4E-1",
+              "Name": "Ceq",
+              "Source": "F1",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "6.916E-4",
+            "displayed_source": "1A",
+            "max": "6.916E-4",
+            "mean": null,
+            "min": "6.916E-4",
+            "name": "Outer OMA",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "6.916E-4",
+              "Max": "6.916E-4",
+              "Min": "6.916E-4",
+              "Name": "Outer OMA",
+              "Source": "1A",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "8.0E-1",
+            "displayed_source": "1A",
+            "max": "8.0E-1",
+            "mean": null,
+            "min": "8.0E-1",
+            "name": "Average Power",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "8.0E-1",
+              "Max": "8.0E-1",
+              "Min": "8.0E-1",
+              "Name": "Average Power",
+              "Source": "1A",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "2.617",
+            "displayed_source": "1A",
+            "max": "2.617",
+            "mean": null,
+            "min": "2.617",
+            "name": "Outer ER",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "2.617",
+              "Max": "2.617",
+              "Min": "2.617",
+              "Name": "Outer ER",
+              "Source": "1A",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "1.5612E-3",
+            "displayed_source": "F1",
+            "max": "1.5612E-3",
+            "mean": null,
+            "min": "1.5612E-3",
+            "name": "Level 3",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "1.5612E-3",
+              "Max": "1.5612E-3",
+              "Min": "1.5612E-3",
+              "Name": "Level 3",
+              "Source": "F1",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "1.3086E-3",
+            "displayed_source": "F1",
+            "max": "1.3086E-3",
+            "mean": null,
+            "min": "1.3086E-3",
+            "name": "Level 2",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "1.3086E-3",
+              "Max": "1.3086E-3",
+              "Min": "1.3086E-3",
+              "Name": "Level 2",
+              "Source": "F1",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "1.0544E-3",
+            "displayed_source": "F1",
+            "max": "1.0544E-3",
+            "mean": null,
+            "min": "1.0544E-3",
+            "name": "Level 1",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "1.0544E-3",
+              "Max": "1.0544E-3",
+              "Min": "1.0544E-3",
+              "Name": "Level 1",
+              "Source": "F1",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "8.048E-4",
+            "displayed_source": "F1",
+            "max": "8.048E-4",
+            "mean": null,
+            "min": "8.048E-4",
+            "name": "Level 0",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "8.048E-4",
+              "Max": "8.048E-4",
+              "Min": "8.048E-4",
+              "Name": "Level 0",
+              "Source": "F1",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          },
+          {
+            "current": "2.48",
+            "displayed_source": "F1",
+            "max": "2.48",
+            "mean": null,
+            "min": "2.48",
+            "name": "TDECQ",
+            "raw_fields": {
+              "Count": "1",
+              "Current": "2.48",
+              "Max": "2.48",
+              "Min": "2.48",
+              "Name": "TDECQ",
+              "Source": "F1",
+              "Status": "Correct"
+            },
+            "status": "Correct",
+            "stddev": null,
+            "unit": null
+          }
+        ],
+        "symbol_rate_baud": 53125000000.0,
+        "tdecq": {
+          "details": "Correct",
+          "displayed_source": "FUNC1",
+          "function": "FUNC1",
+          "input_channel": "CHAN1A",
+          "statistics": {
+            "max": 2.48,
+            "min": 2.48
+          },
+          "status": "CORR",
+          "unit": null,
+          "value": 2.48
+        },
+        "trigger_ratio": "SUB4",
+        "trigger_source": "FPAN",
+        "wavelength_m": 8.5e-07
+      },
+      "i2c": {
+        "chip_id": 82,
+        "chip_revision": 0,
+        "fields": {
+          "efin_cur": 15,
+          "eq": 22,
+          "gain_ctrl": 5,
+          "ibias_dac": 70,
+          "res_bw": 0,
+          "res_gain": 6,
+          "vbias_ref": 15,
+          "vga_cur": 13,
+          "vref": 15
+        }
+      }
+    },
+    "raw_responses": {
+      "bert": {
+        "configuration": "-28 9 0 104 -8 1 -3 off off off SSPRQ N/A SSPRQ 6 6 0 ns enabled txDisabled rxDisabled",
+        "mode": "PAM4 53.125 1lanePerPort"
+      },
+      "dca": {
+        "*IDN?": "Keysight Technologies,N1010A,Nate-Rog,A.08.32.13\n",
+        ":CHAN1A:WAVelength:VALue?": "8.50000000000000E-07\n",
+        ":FUNCtion1:OPERand?": "CHAN1A\n",
+        ":MEASure:RESults? STANdard": "Name=Undershoot(3.0E-3),Source=1A,Current=1.709E+1,Status=Correct,Min=1.709E+1,Max=1.709E+1,Count=1,Name=Overshoot(3.0E-3),Source=1A,Current=1.527E+1,Status=Correct,Min=1.527E+1,Max=1.527E+1,Count=1,Name=RLM (802.3 A_120D),Source=1A,Current=9.60E-1,Status=Correct,Min=9.60E-1,Max=9.60E-1,Count=1,Name=Ceq,Source=F1,Current=4.4E-1,Status=Correct,Min=4.4E-1,Max=4.4E-1,Count=1,Name=Outer OMA,Source=1A,Current=6.916E-4,Status=Correct,Min=6.916E-4,Max=6.916E-4,Count=1,Name=Average Power,Source=1A,Current=8.0E-1,Status=Correct,Min=8.0E-1,Max=8.0E-1,Count=1,Name=Outer ER,Source=1A,Current=2.617,Status=Correct,Min=2.617,Max=2.617,Count=1,Name=Level 3,Source=F1,Current=1.5612E-3,Status=Correct,Min=1.5612E-3,Max=1.5612E-3,Count=1,Name=Level 2,Source=F1,Current=1.3086E-3,Status=Correct,Min=1.3086E-3,Max=1.3086E-3,Count=1,Name=Level 1,Source=F1,Current=1.0544E-3,Status=Correct,Min=1.0544E-3,Max=1.0544E-3,Count=1,Name=Level 0,Source=F1,Current=8.048E-4,Status=Correct,Min=8.048E-4,Max=8.048E-4,Count=1,Name=TDECQ,Source=F1,Current=2.48,Status=Correct,Min=2.48,Max=2.48,Count=1\n",
+        ":TRIGger:DCDRatio?": "SUB4\n",
+        ":TRIGger:PLENgth?": "65535\n",
+        ":TRIGger:SOURce?": "FPAN\n",
+        ":TRIGger:SRATe?": "5.3125000E+10\n"
+      },
+      "dca_isolation": {
+        "journal_path": "C:\\Users\\NateS\\Documents\\VCSEL\\.worktrees\\v1.2-native-pilot-fast24-isolation\\artifacts\\hw-v12-soak-8h\\v1.2\\preflight-dca\\read-only-preflight\\dca_io_journal.jsonl",
+        "method": "spawn_watchdog",
+        "parent_pid": 21564,
+        "worker_is_separate": true,
+        "worker_pid": 34452
+      },
+      "i2c": {
+        "entry_page": "0x20",
+        "page_selects": [
+          {
+            "ack_hex": "020100",
+            "frame_hex": "050203a6ff00",
+            "page": "0x00",
+            "reason": "identity"
+          },
+          {
+            "ack_hex": "020100",
+            "frame_hex": "050203a6ff20",
+            "page": "0x20",
+            "reason": "field:ibias_dac"
+          },
+          {
+            "ack_hex": "020100",
+            "frame_hex": "050203a6ff20",
+            "page": "0x20",
+            "reason": "restore"
+          }
+        ],
+        "register_bytes": {
+          "0x0004": "0x52",
+          "0x0005": "0x00",
+          "0x2002": "0x46",
+          "0x2003": "0x0F",
+          "0x2005": "0x0D",
+          "0x2006": "0x16",
+          "0x2007": "0x06",
+          "0x2008": "0x00",
+          "0x2009": "0x05",
+          "0x200A": "0x0F",
+          "0x200B": "0x0F"
+        },
+        "restore_readback": "0x20",
+        "restore_target": "0x20",
+        "restore_verified": true
+      }
+    },
+    "started_at_utc": "2026-08-11T17:13:35.828661+00:00",
+    "targets": {
+      "bert": {
+        "channel": "0",
+        "host": "192.168.3.2",
+        "local_ip": "192.168.3.1",
+        "mode": "PAM4",
+        "port": "port1",
+        "udp_port": 9000
+      },
+      "dca_visa": "TCPIP0::Nate-Rog::hislip0,4880::INSTR",
+      "i2c": {
+        "address": "0xA6",
+        "baudrate": 115200,
+        "com": "COM7"
+      }
+    },
+    "timeout_s": 60.0,
+    "total_duration_s": 1.2095259000197984
+  },
+  "mapping": [
+    {
+      "bit_start": 0,
+      "bits": 7,
+      "channel0_address": 8194,
+      "channel_stride": 256,
+      "current_value": 70,
+      "encoding_max": 127,
+      "encoding_min": 0,
+      "name": "ibias_dac",
+      "reason": null,
+      "script_order": 0,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": 0,
+      "bits": 4,
+      "channel0_address": 8195,
+      "channel_stride": 256,
+      "current_value": 15,
+      "encoding_max": 15,
+      "encoding_min": 0,
+      "name": "efin_cur",
+      "reason": null,
+      "script_order": 1,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": 0,
+      "bits": 4,
+      "channel0_address": 8197,
+      "channel_stride": 256,
+      "current_value": 13,
+      "encoding_max": 15,
+      "encoding_min": 0,
+      "name": "vga_cur",
+      "reason": null,
+      "script_order": 2,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": 0,
+      "bits": 5,
+      "channel0_address": 8198,
+      "channel_stride": 256,
+      "current_value": 22,
+      "encoding_max": 31,
+      "encoding_min": 0,
+      "name": "eq",
+      "reason": null,
+      "script_order": 3,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": 0,
+      "bits": 4,
+      "channel0_address": 8199,
+      "channel_stride": 256,
+      "current_value": 6,
+      "encoding_max": 15,
+      "encoding_min": 0,
+      "name": "res_gain",
+      "reason": null,
+      "script_order": 4,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": 0,
+      "bits": 4,
+      "channel0_address": 8200,
+      "channel_stride": 256,
+      "current_value": 0,
+      "encoding_max": 15,
+      "encoding_min": 0,
+      "name": "res_bw",
+      "reason": null,
+      "script_order": 5,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": 0,
+      "bits": 6,
+      "channel0_address": 8201,
+      "channel_stride": 256,
+      "current_value": 5,
+      "encoding_max": 63,
+      "encoding_min": 0,
+      "name": "gain_ctrl",
+      "reason": null,
+      "script_order": 6,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": 0,
+      "bits": 4,
+      "channel0_address": 8202,
+      "channel_stride": 256,
+      "current_value": 15,
+      "encoding_max": 15,
+      "encoding_min": 0,
+      "name": "vbias_ref",
+      "reason": null,
+      "script_order": 7,
+      "status": "AVAILABLE"
+    },
+    {
+      "bit_start": 0,
+      "bits": 4,
+      "channel0_address": 8203,
+      "channel_stride": 256,
+      "current_value": 15,
+      "encoding_max": 15,
+      "encoding_min": 0,
+      "name": "vref",
+      "reason": null,
+      "script_order": 8,
+      "status": "AVAILABLE"
+    }
+  ],
+  "mapping_hash": "a6793cc6056c0275e5d389e88107a6cbbf41974e9c9ec904e3d17028ebea246e",
+  "snapshot_token": "read-only-snapshot-00000050-8ce450d36bca",
+  "status": "SUCCESS"
+}

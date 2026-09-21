@@ -1,0 +1,128 @@
+"""Hardware-independent AI Tuning V1.1 algorithm contracts."""
+
+from .alternating import (
+    AlternatingController,
+    AlternationDecision,
+    AlternationMode,
+    AlternationPolicy,
+    AlternationStage,
+    CompleteTuningCombination,
+)
+from .models import (
+    AggregatedObservation,
+    AlgorithmCandidate,
+    ExperimentFingerprint,
+    I2CObservation,
+    MetricResult,
+    OptimizerStatus,
+)
+from .coarse import CoarsePlanner, CoarseSummary
+from .grid import (
+    DiscreteParameterSpace,
+    TuningParameter,
+    seeded_permutation_indices,
+)
+from .fine import (
+    DiscreteBayesianFine,
+    FineBootstrap,
+    FineDecision,
+    build_fine_from_coarse,
+)
+from .fir import (
+    FirAuthorizationEnvelope,
+    FirCandidate,
+    FirDecision,
+    FirDecisionController,
+    FirDecisionStatus,
+    FirTarget,
+)
+from .objective import (
+    Comparison,
+    aggregate_repeated_observations,
+    best_observation,
+    compare_results,
+)
+from .retune import (
+    RetunePlanner,
+    RetuneResult,
+    build_local_space,
+    select_retune_history,
+)
+from .replay import (
+    ReplayDecision,
+    ReplayOracle,
+    ReplayOracleEntry,
+    ReplayOracleOutcome,
+    ReplayPhase,
+    ReplayReport,
+    ReplayRunReport,
+    ReplaySnapshot,
+    ReplayStage,
+    ReplayTraceStep,
+    evaluate_replay,
+    run_replay,
+)
+from .sweep import (
+    SweepFirTarget,
+    SweepMode,
+    SweepPlanner,
+    SweepPoint,
+    SweepPointStatus,
+    SweepTask,
+)
+
+__all__ = [
+    "AggregatedObservation",
+    "AlgorithmCandidate",
+    "AlternatingController",
+    "AlternationDecision",
+    "AlternationMode",
+    "AlternationPolicy",
+    "AlternationStage",
+    "Comparison",
+    "CompleteTuningCombination",
+    "CoarsePlanner",
+    "CoarseSummary",
+    "DiscreteParameterSpace",
+    "DiscreteBayesianFine",
+    "ExperimentFingerprint",
+    "FineBootstrap",
+    "FineDecision",
+    "FirAuthorizationEnvelope",
+    "FirCandidate",
+    "FirDecision",
+    "FirDecisionController",
+    "FirDecisionStatus",
+    "FirTarget",
+    "I2CObservation",
+    "MetricResult",
+    "OptimizerStatus",
+    "RetunePlanner",
+    "RetuneResult",
+    "ReplayDecision",
+    "ReplayOracle",
+    "ReplayOracleEntry",
+    "ReplayOracleOutcome",
+    "ReplayPhase",
+    "ReplayReport",
+    "ReplayRunReport",
+    "ReplaySnapshot",
+    "ReplayStage",
+    "ReplayTraceStep",
+    "SweepFirTarget",
+    "SweepMode",
+    "SweepPlanner",
+    "SweepPoint",
+    "SweepPointStatus",
+    "SweepTask",
+    "TuningParameter",
+    "aggregate_repeated_observations",
+    "best_observation",
+    "build_fine_from_coarse",
+    "build_local_space",
+    "compare_results",
+    "evaluate_replay",
+    "run_replay",
+    "seeded_permutation_indices",
+    "select_retune_history",
+]

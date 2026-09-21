@@ -1,0 +1,31 @@
+{
+  "schema_version": "2.0",
+  "example_kind": "deterministic_mock_only",
+  "hardware_contacted": false,
+  "note": "Durations come from an injected monotonic clock; this is not live hardware evidence.",
+  "measurement": {
+    "repeat_index": 1,
+    "started_at_utc": "2026-07-31T10:00:00+00:00",
+    "finished_at_utc": "2026-07-31T10:00:06+00:00",
+    "artifact_started_at_utc": "2026-07-31T10:00:06+00:00",
+    "artifact_finished_at_utc": "2026-07-31T10:00:06.100000+00:00",
+    "apply_duration_s": 0.2,
+    "readback_duration_s": 0.3,
+    "actual_settle_s": 2.0,
+    "acquisition_duration_s": 1.0,
+    "wait_for_valid_duration_s": 2.0,
+    "query_duration_s": 0.5,
+    "artifact_duration_s": 0.1,
+    "phase_sum_duration_s": 6.0,
+    "candidate_round_time_s": 6.1,
+    "total_duration_s": 6.1,
+    "observation_valid": true
+  },
+  "restore_duration_s": 0.5,
+  "screening_round_with_restore_s": 6.6,
+  "phase_evidence": {
+    "query_duration_scope": "final source/status/details/value/tap SCPI queries only",
+    "polling_wait_excluded_from_query_duration": true,
+    "artifact_duration_scope": "durable per-round JSON write, flush, fsync, and atomic replace"
+  }
+}

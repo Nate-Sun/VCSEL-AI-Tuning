@@ -1,0 +1,64 @@
+# VCSEL lab live endpoints / VCSEL 实验室真实硬件端口
+dca:
+  resource: TCPIP0::Nate-Rog::hislip0,4880::INSTR
+  # Verified by the prior read-only live probe; serial/firmware suffix may vary.
+  # 已由之前的只读真实探测确认；序列号和固件后缀允许变化。
+  expected_idn_prefix: "Keysight Technologies,N1010A,"
+  function: 1
+  timeout_ms: 60000
+
+bert:
+  ip: 192.168.3.2
+  local_ip: 192.168.3.1
+  udp_port: 9000
+  port: port1
+  channel: "0"
+  timeout_s: 2.0
+
+i2c:
+  port: COM7
+  baudrate: 115200
+  device_address: 0xA6
+  chip_id_register: 0x0004
+  # Read repeatedly from the currently connected target on 2026-07-21.
+  expected_chip_id: 0x52
+  chip_revision_register: 0x0005
+  expected_chip_revision: 0x00
+
+# AI tuning 前硬件标定 / Pre-tuning hardware characterization
+characterization:
+  default_channel: 0
+  baseline_repeats: 5
+  measurement_timeout_s: 180
+  poll_interval_s: 1
+  # null means no operator floor is asserted; recommendations use measured 3 sigma.
+  # null 表示尚未声明人工 floor；建议值只使用实测 3 sigma。
+  meaningful_er_floor_db: null
+  meaningful_tdecq_floor_db: null
+  tdecq:
+    # Results displays TDECQ on F1; FUNC1 reads CHAN1A as its operand.
+    # GUI 结果为 TDECQ(F1)；每次接受读数前都核对该 source。
+    source: FUNC1
+    input_channel: CHAN1A
+  er:
+    # Current GUI measurement is PAM Outer ER on Channel 1A. Runtime must verify it.
+    # 当前 GUI 为 Channel 1A 的 PAM Outer ER，运行时仍必须只读核验。
+    source: CHAN1A
+    value_query: ":MEASure:EYE:OER?"
+    source_query: ":MEASure:EYE:OER:SOURce?"
+    status_query: ":MEASure:EYE:OER:STATus?"
+    details_query: ":MEASure:EYE:OER:STATus:DETails?"
+    units_query: ":MEASure:EYE:OER:UNITs?"
+  parameters:
+    ibias_dac: {address: 0x2002, bit_start: 0, bits: 7}
+    efin_cur: {address: 0x2003, bit_start: 0, bits: 4}
+    vga_cur: {address: 0x2005, bit_start: 0, bits: 4}
+    eq: {address: 0x2006, bit_start: 0, bits: 5}
+    res_gain: {address: 0x2007, bit_start: 0, bits: 4}
+    res_bw: {address: 0x2008, bit_start: 0, bits: 4}
+    gain_ctrl: {address: 0x2009, bit_start: 0, bits: 6}
+    vbias_ref: {address: 0x200A, bit_start: 0, bits: 4}
+    vref: {address: 0x200B, bit_start: 0, bits: 4}
+  # Deliberately empty: encoding widths are not experimental safety limits.
+  # 故意留空：寄存器位宽不是实验安全范围。
+  safety_limits: {}

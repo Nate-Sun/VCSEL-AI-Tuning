@@ -1,0 +1,28 @@
+mode: LIVE
+result_dir: artifacts/v2.1/continuous/controller
+live:
+  runtime_config: configs/ai_tuning/runtime.v2_1.continuous.live.yaml
+  campaign_id: REPLACE_WITH_FRESH_CAMPAIGN_ID
+  kimi_model: kimi-k3
+  parameter_policy:
+    version: i2c-restricted-v1
+    max_changed_parameters: 3
+    rules:
+      ibias_dac: {minimum: 60, maximum: 80, max_step: 10}
+      efin_cur: {minimum: 10, maximum: 15, max_step: 3}
+      vga_cur: {minimum: 10, maximum: 15, max_step: 3}
+      eq: {minimum: 16, maximum: 25, max_step: 3}
+      res_gain: {minimum: 0, maximum: 10, max_step: 3}
+      res_bw: {minimum: 0, maximum: 5, max_step: 1}
+      gain_ctrl: {minimum: 0, maximum: 10, max_step: 3}
+      vbias_ref: {minimum: 10, maximum: 15, max_step: 3}
+      vref: {minimum: 10, maximum: 15, max_step: 3}
+  instruction: >-
+    Treat the left raw PAM4 eye in each DCA screen as the primary signal to
+    improve; use the right TDECQ-equalized view only as supporting evidence.
+    Use the structured target.tdecq_db_lt supplied for this run as the strict
+    TDECQ goal, and use the structured round.maximum as the total proposal
+    budget. Use sparse safe absolute I2C values. An exploratory round may be
+    worse; learn from its measured result and continue within the remaining
+    round budget. Do not request FIR, BERT, NLC, or more than three parameter
+    changes in one proposal.

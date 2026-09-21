@@ -1,0 +1,29 @@
+{
+  "mode": "iterative",
+  "manual_main": 104,
+  "dca": {
+    "idn": "Keysight Technologies,N1000A,fixture-iterative,A.07.50",
+    "tdecq_db": 2.61,
+    "status": "CORR",
+    "details": "Offline iterative workbook fixture",
+    "function": 1,
+    "taps": [
+      0,
+      0,
+      0.0012,
+      1.188325,
+      0.009687,
+      0.011,
+      -0.028617,
+      -0.04
+    ],
+    "precursor_count": 3
+  },
+  "bert": {
+    "port": "port1",
+    "channel": 0,
+    "upper_nlc": 0,
+    "lower_nlc": 0,
+    "current_fir": [0, 6, -28, 112, -8, -10, 0]
+  }
+}

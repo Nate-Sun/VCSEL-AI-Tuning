@@ -1,0 +1,30 @@
+{
+  "mode": "first",
+  "manual_main": 90,
+  "dca": {
+    "idn": "Keysight Technologies,N1000A,fixture-first,A.07.50",
+    "tdecq_db": 2.75,
+    "status": "CORR",
+    "details": "Offline workbook fixture",
+    "function": 1,
+    "taps": [
+      0.008756,
+      0.079768,
+      -0.291888,
+      1.336349,
+      -0.084736,
+      0.02357,
+      -0.016326,
+      -0.02607,
+      -0.029423
+    ],
+    "precursor_count": 3
+  },
+  "bert": {
+    "port": "port1",
+    "channel": 0,
+    "upper_nlc": 0,
+    "lower_nlc": 0,
+    "current_fir": null
+  }
+}

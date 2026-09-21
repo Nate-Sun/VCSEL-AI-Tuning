@@ -1,0 +1,111 @@
+/**
+ * Mirrors the persisted V1.1 `/sweep-points` response shape, including the
+ * timing evidence embedded in `raw_response` by the live sweep runner.
+ */
+export const v11SweepPointsResponseFixture = {
+  items: [
+    {
+      point_id: "point-00000004",
+      original_index: 4,
+      execution_index: 0,
+      status: "COMPLETED",
+      requested: { ibias_dac: 73, res_gain: 4 },
+      applied: { ibias_dac: 73, res_gain: 4 },
+      readback: { ibias_dac: 73, res_gain: 4 },
+      tdecq: 5.35,
+      er: 2.607,
+      raw_response: {
+        point_id: "point-00000004",
+        execution_order: 0,
+        requested_settle_s: 0.1,
+        actual_settle_s: 0.10011990001657978,
+        application: {
+          receipt: {
+            apply_duration_s: 0.0019738,
+            readback_duration_s: 0.0110632,
+            total_duration_s: 0.0132585,
+          },
+        },
+        dca_raw_responses: {
+          timing: {
+            acquisition_duration_s: 0.0005092,
+            apply_duration_s: 0,
+            artifact_duration_s: 0,
+            query_duration_s: 0.0074194,
+            readback_duration_s: 0,
+            total_duration_s: 8.0866074,
+            wait_for_valid_duration_s: 8.078448,
+          },
+        },
+      },
+      error_reason: null,
+      seed: 0,
+      hardware: "I2C_SWEEP",
+      mode: "FULL_COMBINATION",
+      completed_at: "2026-08-04T06:56:01.646559+00:00",
+      write_readback_duration_s: 0.0132585,
+      settle_duration_s: 0.1001199,
+      dca_duration_s: 8.0866074,
+      result_persistence_duration_s: 0.0000142,
+      restore_duration_s: 0.012,
+      candidate_round_time_s: 8.2,
+      screening_round_with_restore_s: 8.212,
+      restore_readback_result: { ibias_dac: 70, res_gain: 6 },
+      restore_status: "VERIFIED",
+    },
+  ],
+  total: 6,
+  offset: 0,
+  limit: 25,
+  // Deliberately outside the current page to prove the UI uses the global
+  // server result instead of recomputing a page-local minimum.
+  best_point: {
+    point_id: "point-00000001",
+    original_index: 1,
+    execution_index: 2,
+    status: "COMPLETED",
+    requested: { ibias_dac: 69, res_gain: 8 },
+    applied: { ibias_dac: 69, res_gain: 8 },
+    readback: { ibias_dac: 69, res_gain: 8 },
+    tdecq: 2.99,
+    er: 2.923,
+    raw_response: {
+      point_id: "point-00000001",
+      execution_order: 2,
+      requested_settle_s: 0.1,
+      actual_settle_s: 0.10051730001578107,
+      application: {
+        receipt: {
+          apply_duration_s: 0.0019925,
+          readback_duration_s: 0.0107705,
+          total_duration_s: 0.0129189,
+        },
+      },
+      dca_raw_responses: {
+        timing: {
+          acquisition_duration_s: 0.0005092,
+          apply_duration_s: 0,
+          artifact_duration_s: 0,
+          query_duration_s: 0.0074194,
+          readback_duration_s: 0,
+          total_duration_s: 8.0991708,
+          wait_for_valid_duration_s: 8.0912422,
+        },
+      },
+    },
+    error_reason: null,
+    seed: 0,
+    hardware: "I2C_SWEEP",
+    mode: "FULL_COMBINATION",
+    completed_at: "2026-08-04T06:56:18.394105+00:00",
+    write_readback_duration_s: 0.0129189,
+    settle_duration_s: 0.1005173,
+    dca_duration_s: 8.0991708,
+    result_persistence_duration_s: 0.0000139,
+    restore_duration_s: 0.0118,
+    candidate_round_time_s: 8.213,
+    screening_round_with_restore_s: 8.2248,
+    restore_readback_result: { ibias_dac: 70, res_gain: 6 },
+    restore_status: "VERIFIED",
+  },
+} as const;

@@ -1,0 +1,23 @@
+mode: LIVE_TUNING
+api:
+  host: 127.0.0.1
+  port: 8775
+storage:
+  sqlite_path: ../../state/hardware-validation/native-20260811-soak-2h-r2/platform/campaigns.sqlite3
+  artifact_root: ../../artifacts/hw-v12-soak-2h-r2/platform
+b0_path: ../../configs/ai_tuning/b0.yaml
+live_ai_profile: PILOT_3_THEN_FAST24
+measurement_timeout_s: 60.0
+cleanup_grace_s: 5.0
+worker_count: 1
+hardware:
+  driver_profile: ../../configs/hardware/vcsel_lab_live.yaml
+  dca_visa_resource: TCPIP0::Nate-Rog::hislip0,4880::INSTR
+  i2c_com_port: COM7
+  i2c_address: 0xA6
+  bert_host: 192.168.3.2
+  bert_port: 9000
+  resource_ids:
+    - DCA-N1010A-CHAN1A
+    - I2C-PHVD1124-COM7-0xA6
+    - BERT-192.168.3.2-PORT1-CH0

@@ -1,0 +1,24 @@
+# Safe default: built-in deterministic fake adapters, no hardware connection.
+# 安全默认值：使用内置确定性 fake Adapter，不连接硬件。
+mode: FAKE
+api:
+  host: 127.0.0.1
+  port: 8000
+storage:
+  sqlite_path: ../../state/ai_tuning/campaigns.sqlite3
+  artifact_root: ../../artifacts/ai_tuning
+b0_path: b0.yaml
+measurement_timeout_s: 30.0
+worker_count: 2
+
+# READ_ONLY and LIVE_TUNING require every field below to be uncommented and
+# explicitly reviewed. No serial, VISA, or network endpoint is guessed.
+# READ_ONLY 与 LIVE_TUNING 必须取消以下全部注释并人工复核；系统不会猜测端点。
+# hardware:
+#   driver_profile: driver-profile.yaml
+#   dca_visa_resource: TCPIP0::dca.example::inst0::INSTR
+#   i2c_com_port: COM7
+#   i2c_address: 166
+#   bert_host: 192.0.2.10
+#   bert_port: 9000
+#   resource_ids: [dca-bench-1, i2c-bench-1, bert-bench-1]

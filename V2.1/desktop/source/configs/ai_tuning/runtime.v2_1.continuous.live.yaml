@@ -1,0 +1,21 @@
+mode: LIVE_TUNING
+api:
+  host: 127.0.0.1
+  port: 8000
+storage:
+  sqlite_path: ../../state/v2.1/continuous/campaigns.sqlite3
+  artifact_root: ../../artifacts/v2.1/continuous/campaigns
+b0_path: b0.v2_1.continuous.yaml
+measurement_timeout_s: 180.0
+worker_count: 1
+hardware:
+  driver_profile: ../hardware/vcsel_lab_v2_1_continuous.yaml
+  dca_visa_resource: TCPIP0::Nate-Rog::hislip0,4880::INSTR
+  i2c_com_port: COM7
+  i2c_address: 166
+  # Schema-required endpoint metadata only; continuous mode never builds BERT.
+  bert_host: 192.168.3.2
+  bert_port: 9000
+  resource_ids:
+    - DCA-N1010A-CHAN1A-FUNC1
+    - I2C-VD1124-COM7-0xA6

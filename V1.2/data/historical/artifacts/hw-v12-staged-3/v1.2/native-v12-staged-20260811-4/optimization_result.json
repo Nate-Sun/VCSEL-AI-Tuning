@@ -1,0 +1,68 @@
+{
+  "b0_hash": "339640b1ab3228a7592418e68b05f127c8e4e8718aff322e04a4ef40a7507f8c",
+  "best_applied_to_hardware": false,
+  "best_state": {
+    "bert_channel": "0",
+    "bert_port": "port1",
+    "dca_fingerprint": "652ea2729693fe5e4a7d3113afc5e7bf2581d2f2cee0eed72dc67e6481be00a5",
+    "fir": [
+      0,
+      9,
+      -28,
+      104,
+      -8,
+      1,
+      -3
+    ],
+    "i2c": {
+      "efin_cur": 15,
+      "eq": 22,
+      "gain_ctrl": 5,
+      "ibias_dac": 79,
+      "res_bw": 0,
+      "res_gain": 0,
+      "vbias_ref": 15,
+      "vga_cur": 13,
+      "vref": 15
+    },
+    "lower_nlc": 6,
+    "observation_id": "native-v12-staged-20260811-4:00000006:i2c_coarse",
+    "pattern": "SSPRQ",
+    "result": {
+      "er_db": 2.269,
+      "er_status": "CORR",
+      "tdecq_db": 4.21,
+      "tdecq_invalid_reason": null,
+      "tdecq_status": "CORR"
+    },
+    "updated_at": "2026-08-11T07:05:50.432142Z",
+    "upper_nlc": 6
+  },
+  "campaign_type": "AI_OPTIMIZATION",
+  "candidate_budget": 27,
+  "candidates_consumed": 4,
+  "configuration_fingerprint": "c33ef38bef0a70e6bf66b0494e9ab67f345e857c26907f84c86584f20c933127",
+  "counts_by_phase": {
+    "B0": 1,
+    "I2C_COARSE": 4,
+    "PILOT_3": 3
+  },
+  "observation_count": 8,
+  "ordered_observation_ids": [
+    "pilot-00000001",
+    "pilot-00000002",
+    "pilot-00000003",
+    "native-v12-staged-20260811-4:00000004:b0",
+    "native-v12-staged-20260811-4:00000005:i2c_coarse",
+    "native-v12-staged-20260811-4:00000006:i2c_coarse",
+    "native-v12-staged-20260811-4:00000007:i2c_coarse",
+    "native-v12-staged-20260811-4:00000008:i2c_coarse"
+  ],
+  "product_version": "1.2.0",
+  "restored_to_b0": false,
+  "runtime_mode": "LIVE",
+  "schema": "vcsel_ai_tuning.v1_1.optimization_result",
+  "schema_version": 3,
+  "task_id": "native-v12-staged-20260811-4",
+  "terminal_lifecycle": null
+}

@@ -1,0 +1,2113 @@
+"""Auditable pre-tuning hardware characterization workflows."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+import csv
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from hashlib import sha256
+import hmac
+import json
+from math import floor, isfinite
+from pathlib import Path
+from statistics import fmean, median, stdev
+import time
+from typing import Any, Callable
+
+from vcsel_ai_tuning.hardware.flexdca import (
+    DcaReadError,
+    DcaSourceMismatchError,
+    QuerySession,
+    read_verified_oer,
+    read_verified_tdecq,
+    select_oer_source,
+    select_tdecq_source,
+)
+from vcsel_ai_tuning.hardware.live_config import (
+    ErMeasurementConfig,
+    LiveHardwareConfig,
+    ParameterFieldConfig,
+)
+from vcsel_ai_tuning.hardware.vd1124 import (
+    Vd1124FieldValue,
+    Vd1124ProbeResult,
+)
+from vcsel_ai_tuning.hardware.vit_bert import BertConfiguration
+
+
+SCHEMA_VERSION = "2.0"
+
+
+class CharacterizationError(RuntimeError):
+    """Raised when a characterization safety or audit invariant fails."""
+
+
+@dataclass(frozen=True, slots=True)
+class CampaignMeasurementResult:
+    """Duck-compatible campaign result without importing the orchestrator."""
+
+    acquisition_valid: bool
+    er_db: float | None
+    er_status: str
+    tdecq_db: float | None
+    tdecq_status: str
+    tdecq_invalid_reason: str | None
+    elapsed_s: float
+    raw_responses: Mapping[str, object]
+    artifacts: tuple[object, ...] = ()
+
+
+class CampaignDcaAdapter:
+    """Lazy bridge from an already-open FlexDCA session to campaign calls."""
+
+    def __init__(
+        self,
+        *,
+        session: QuerySession,
+        config: LiveHardwareConfig,
+        monotonic: Callable[[], float] = time.monotonic,
+        wait: Callable[[float], None] = time.sleep,
+    ) -> None:
+        self._session = session
+        self._config = config
+        self._monotonic = monotonic
+        self._wait = wait
+
+    def _source_mismatch_result(
+        self,
+        error: DcaSourceMismatchError,
+        *,
+        started: float,
+    ) -> CampaignMeasurementResult:
+        er = self._config.characterization.er
+        tdecq = self._config.characterization.tdecq
+        records = _source_mismatch_measurement_records(
+            error,
+            er_config=er,
+            tdecq_source=tdecq.source,
+        )
+        return CampaignMeasurementResult(
+            acquisition_valid=False,
+            er_db=None,
+            er_status=str(records["outer_er"]["status"]),
+            tdecq_db=None,
+            tdecq_status=str(records["tdecq"]["status"]),
+            tdecq_invalid_reason=f"DCA source validation failed: {error}",
+            elapsed_s=max(0.0, self._monotonic() - started),
+            raw_responses={
+                "source_validation_error": {
+                    "message": str(error),
+                    "raw_responses": dict(error.raw_responses),
+                },
+                "measurements": records,
+            },
+        )
+
+    def preflight(self) -> Mapping[str, object]:
+        """Verify identity and measurement bindings using queries only."""
+        dca = self._config.dca
+        tdecq = self._config.characterization.tdecq
+        er = self._config.characterization.er
+        idn = _safe_query(self._session, "*IDN?").strip()
+        tdecq_source = _safe_query(
+            self._session, ":MEASure:EYE:TDEQ:SOURce?"
+        ).strip().upper()
+        er_source = _safe_query(self._session, er.source_query).strip().upper()
+        er_units = _safe_query(self._session, er.units_query).strip().upper()
+        expected_tdecq_source = tdecq.source.strip().upper()
+        expected_er_source = er.source.strip().upper()
+        return {
+            "identity_verified": idn.startswith(dca.expected_idn_prefix),
+            "configuration_verified": (
+                tdecq_source == expected_tdecq_source
+                and er_source == expected_er_source
+                and er_units in {"DB", "DEC", "DECIBEL"}
+            ),
+            "idn": idn,
+            "tdecq_source": tdecq_source,
+            "er_source": er_source,
+            "er_units": er_units,
+            "raw_responses": {
+                "*IDN?": idn,
+                ":MEASure:EYE:TDEQ:SOURce?": tdecq_source,
+                er.source_query: er_source,
+                er.units_query: er_units,
+            },
+        }
+
+    def measure_single(self) -> CampaignMeasurementResult:
+        """Run exactly one fresh Stop/Clear/Single acquisition cycle."""
+        started = self._monotonic()
+        tdecq = self._config.characterization.tdecq
+        er = self._config.characterization.er
+        try:
+            selected_tdecq_source, source_selection_raw = select_tdecq_source(
+                self._session, measurement_source=tdecq.source
+            )
+        except DcaSourceMismatchError as error:
+            return self._source_mismatch_result(error, started=started)
+        for command in (":ACQuire:STOP", ":ACQuire:CDISplay"):
+            _safe_write(self._session, command)
+        try:
+            cleared_er = _read_source_bound_oer_status(self._session, er)
+            cleared_tdecq = _read_source_bound_tdecq_status(
+                self._session, tdecq.source
+            )
+        except DcaSourceMismatchError as error:
+            return self._source_mismatch_result(error, started=started)
+        if cleared_er == "CORR" or cleared_tdecq == "CORR":
+            raise CharacterizationError(
+                "DCA Clear did not invalidate both ER and TDECQ results"
+            )
+        _safe_write(self._session, ":ACQuire:SINGle")
+
+        timeout_s = self._config.characterization.measurement_timeout_s
+        deadline = self._monotonic() + timeout_s
+        er_status = "INV"
+        tdecq_status = "INV"
+        status_polls: list[dict[str, str]] = []
+        tdecq_details_polls: list[str] = []
+        while self._monotonic() < deadline:
+            try:
+                er_status = _read_source_bound_oer_status(self._session, er)
+                tdecq_status = _read_source_bound_tdecq_status(
+                    self._session, tdecq.source
+                )
+            except DcaSourceMismatchError as error:
+                return self._source_mismatch_result(error, started=started)
+            status_polls.append(
+                {"er_status": er_status, "tdecq_status": tdecq_status}
+            )
+            if er_status == "CORR" and tdecq_status == "CORR":
+                break
+            if er_status == "CORR" and tdecq_status == "INV":
+                details = _safe_query(
+                    self._session,
+                    ":MEASure:EYE:TDEQ:STATus:DETails?",
+                ).strip()
+                tdecq_details_polls.append(details)
+                normalized_details = details.casefold()
+                terminal_details = {"target ser lower than actual"}
+                if normalized_details in terminal_details:
+                    break
+            self._wait(self._config.characterization.poll_interval_s)
+
+        raw: dict[str, object] = {
+            "cleared_er_status": cleared_er,
+            "cleared_tdecq_status": cleared_tdecq,
+            "status_polls": status_polls,
+            "tdecq_details_polls": tdecq_details_polls,
+            "tdecq_source_selection": {
+                "requested_source": tdecq.source,
+                "verified_source": selected_tdecq_source,
+                "raw_responses": dict(source_selection_raw),
+            },
+            "measurements": {},
+        }
+        measurement_records = raw["measurements"]
+        assert isinstance(measurement_records, dict)
+        try:
+            er_snapshot = read_verified_oer(self._session, er)
+        except DcaReadError as error:
+            er_db: float | None = None
+            er_valid = False
+            raw["er"] = {
+                "error": str(error),
+                "raw_responses": dict(error.raw_responses),
+            }
+            er_record = _measurement_error_record(
+                error,
+                requested_source=er.source,
+                source_query=er.source_query,
+                status_query=er.status_query,
+                details_query=er.details_query,
+            )
+            measurement_records["outer_er"] = er_record
+            verified_er_status = (
+                str(er_record["status"])
+                if isinstance(error, DcaSourceMismatchError)
+                else "INV"
+            )
+        else:
+            er_db = er_snapshot.value_db
+            verified_er_status = er_snapshot.status
+            er_valid = bool(
+                er_snapshot.valid
+                and er_snapshot.status == "CORR"
+                and er_snapshot.value_db is not None
+            )
+            raw["er"] = dict(er_snapshot.raw_responses)
+            measurement_records["outer_er"] = _measurement_record(
+                requested_source=er.source,
+                verified_source=er_snapshot.source,
+                status=er_snapshot.status,
+                value=er_snapshot.value_db,
+                details=er_snapshot.details,
+            )
+
+        tdecq_db: float | None = None
+        tdecq_invalid_reason: str | None = None
+        if tdecq_status == "CORR":
+            try:
+                tdecq_snapshot = read_verified_tdecq(
+                    self._session,
+                    self._config.dca.function,
+                    measurement_source=tdecq.source,
+                )
+            except DcaReadError as error:
+                tdecq_invalid_reason = f"TDECQ validation failed: {error}"
+                raw["tdecq"] = dict(error.raw_responses)
+                tdecq_record = _measurement_error_record(
+                    error,
+                    requested_source=tdecq.source,
+                    source_query=":MEASure:EYE:TDEQ:SOURce?",
+                    status_query=":MEASure:EYE:TDEQ:STATus?",
+                    details_query=":MEASure:EYE:TDEQ:STATus:DETails?",
+                )
+                measurement_records["tdecq"] = tdecq_record
+                tdecq_status = (
+                    str(tdecq_record["status"])
+                    if isinstance(error, DcaSourceMismatchError)
+                    else "INV"
+                )
+            else:
+                tdecq_status = tdecq_snapshot.status
+                tdecq_db = tdecq_snapshot.tdecq_db
+                raw["tdecq"] = dict(tdecq_snapshot.raw_responses)
+                measurement_records["tdecq"] = _measurement_record(
+                    requested_source=tdecq.source,
+                    verified_source=tdecq_snapshot.verified_measurement_source,
+                    status=tdecq_snapshot.status,
+                    value=tdecq_snapshot.tdecq_db,
+                    details=tdecq_snapshot.details,
+                )
+        else:
+            tdecq_value_query = ":MEASure:EYE:TDEQ?"
+            tdecq_status_query = ":MEASure:EYE:TDEQ:STATus?"
+            tdecq_details_query = ":MEASure:EYE:TDEQ:STATus:DETails?"
+            tdecq_source_query = ":MEASure:EYE:TDEQ:SOURce?"
+            try:
+                verified_source, source_raw = select_tdecq_source(
+                    self._session, measurement_source=tdecq.source
+                )
+            except DcaReadError as error:
+                tdecq_invalid_reason = f"TDECQ validation failed: {error}"
+                raw["tdecq"] = dict(error.raw_responses)
+                tdecq_record = _measurement_error_record(
+                    error,
+                    requested_source=tdecq.source,
+                    source_query=tdecq_source_query,
+                    status_query=tdecq_status_query,
+                    details_query=tdecq_details_query,
+                )
+                measurement_records["tdecq"] = tdecq_record
+                tdecq_status = (
+                    str(tdecq_record["status"])
+                    if isinstance(error, DcaSourceMismatchError)
+                    else "INV"
+                )
+                return CampaignMeasurementResult(
+                    acquisition_valid=er_valid,
+                    er_db=er_db,
+                    er_status=verified_er_status,
+                    tdecq_db=None,
+                    tdecq_status=tdecq_status,
+                    tdecq_invalid_reason=tdecq_invalid_reason,
+                    elapsed_s=max(0.0, self._monotonic() - started),
+                    raw_responses=raw,
+                )
+            tdecq_raw = dict(source_raw)
+            tdecq_raw.update(
+                {
+                    tdecq_status_query: _safe_query(
+                        self._session, tdecq_status_query
+                    ),
+                    tdecq_details_query: _safe_query(
+                        self._session, tdecq_details_query
+                    ),
+                    tdecq_value_query: _safe_query(
+                        self._session, tdecq_value_query
+                    ),
+                }
+            )
+            reported_tdecq_status = tdecq_raw[
+                tdecq_status_query
+            ].strip().upper()
+            details = tdecq_raw[tdecq_details_query].strip()
+            tdecq_status = "INV"
+            if reported_tdecq_status == "CORR":
+                tdecq_invalid_reason = (
+                    "TDECQ became CORR only after the acquisition deadline "
+                    f"and was not verified: {details}"
+                )
+            else:
+                tdecq_invalid_reason = (
+                    "TDECQ status is "
+                    f"{reported_tdecq_status or '<empty>'}: {details}"
+                )
+            raw["tdecq"] = tdecq_raw
+            measurement_records["tdecq"] = _measurement_record(
+                requested_source=tdecq.source,
+                verified_source=verified_source,
+                status=reported_tdecq_status or "INV",
+                value=None,
+                details=details,
+            )
+
+        return CampaignMeasurementResult(
+            acquisition_valid=er_valid,
+            er_db=er_db,
+            er_status=verified_er_status,
+            tdecq_db=tdecq_db,
+            tdecq_status=tdecq_status,
+            tdecq_invalid_reason=tdecq_invalid_reason,
+            elapsed_s=max(0.0, self._monotonic() - started),
+            raw_responses=raw,
+        )
+
+
+class CampaignI2cAdapter:
+    """Lazy VD1124 campaign bridge with exact stale/readback guards."""
+
+    def __init__(
+        self,
+        *,
+        writer: object,
+        identity_probe: object,
+        config: LiveHardwareConfig,
+    ) -> None:
+        self._writer = writer
+        self._identity_probe = identity_probe
+        self._config = config
+        self._channel = config.characterization.default_channel
+        self._fields = config.characterization.parameters
+        self._by_name = {field.name: field for field in self._fields}
+
+    @staticmethod
+    def _optional_attribute_matches(
+        target: object, name: str, expected: object
+    ) -> bool:
+        actual = getattr(target, name, expected)
+        return actual == expected
+
+    def preflight(self) -> Mapping[str, object]:
+        identity = self._identity_probe.probe()
+        readback = self.readback()
+        i2c = self._config.i2c
+        identity_verified = bool(
+            identity.matched
+            and identity.port.upper() == i2c.port.upper()
+            and identity.chip_id == i2c.expected_chip_id
+            and identity.chip_revision == i2c.expected_chip_revision
+        )
+        configuration_verified = bool(
+            len(readback) == len(self._fields)
+            and self._optional_attribute_matches(
+                self._writer, "port", i2c.port
+            )
+            and self._optional_attribute_matches(
+                self._writer, "baudrate", i2c.baudrate
+            )
+            and self._optional_attribute_matches(
+                self._writer, "address", i2c.device_address
+            )
+        )
+        return {
+            "identity_verified": identity_verified,
+            "configuration_verified": configuration_verified,
+            "port": identity.port,
+            "chip_id": identity.chip_id,
+            "chip_revision": identity.chip_revision,
+            "channel": self._channel,
+            "readback": readback,
+        }
+
+    def _read_fields(
+        self, fields: tuple[ParameterFieldConfig, ...]
+    ) -> tuple[Vd1124FieldValue, ...]:
+        try:
+            values = self._writer.read_fields(fields, channel=self._channel)
+        except Exception as error:
+            raise CharacterizationError(
+                f"I2C parameter readback failed: {error}"
+            ) from error
+        if not isinstance(values, Sequence) or len(values) != len(fields):
+            raise CharacterizationError("I2C parameter readback is incomplete")
+        result = tuple(values)
+        for field, value in zip(fields, result, strict=True):
+            if (
+                not isinstance(value, Vd1124FieldValue)
+                or value.name != field.name
+                or value.channel != self._channel
+                or value.address != field.address_for_channel(self._channel)
+                or not 0 <= value.raw_value <= 0xFF
+                or not 0 <= value.value <= field.encoded_max
+                or ((value.raw_value >> field.bit_start) & field.encoded_max)
+                != value.value
+            ):
+                raise CharacterizationError(
+                    f"I2C readback for {field.name} is malformed"
+                )
+        return result
+
+    def readback(self) -> Mapping[str, int]:
+        return {
+            value.name: value.value
+            for value in self._read_fields(self._fields)
+        }
+
+    def apply(self, requested: Mapping[str, int]) -> Mapping[str, int]:
+        if not isinstance(requested, Mapping):
+            raise CharacterizationError("I2C requested settings must be an object")
+        unknown = sorted(set(requested) - set(self._by_name))
+        if unknown:
+            raise CharacterizationError(
+                "unknown I2C parameter(s): " + ", ".join(unknown)
+            )
+        for name, value in requested.items():
+            field = self._by_name[name]
+            if type(value) is not int or not 0 <= value <= field.encoded_max:
+                raise CharacterizationError(
+                    f"{name} value is outside its encoding range"
+                )
+
+        applied: dict[str, int] = {}
+        for field in self._fields:
+            if field.name not in requested:
+                continue
+            before = self._read_fields((field,))[0]
+            target = requested[field.name]
+            try:
+                result = self._writer.write_field(
+                    field,
+                    channel=self._channel,
+                    value=target,
+                    expected_current=before.value,
+                    expected_raw=before.raw_value,
+                )
+            except Exception as error:
+                raise CharacterizationError(
+                    f"I2C write/readback failed for {field.name}: {error}"
+                ) from error
+            mask = field.encoded_max << field.bit_start
+            expected_after_raw = (
+                before.raw_value & ~mask
+            ) | (target << field.bit_start)
+            if (
+                result.name != field.name
+                or result.channel != self._channel
+                or result.address != before.address
+                or result.before_raw != before.raw_value
+                or result.before_value != before.value
+                or result.requested_value != target
+                or result.after_raw != expected_after_raw
+                or result.after_value != target
+                or result.verified is not True
+            ):
+                raise CharacterizationError(
+                    f"I2C write result for {field.name} is inconsistent"
+                )
+            applied[field.name] = result.after_value
+        return applied
+
+
+def _canonical_json(document: Mapping[str, object]) -> str:
+    return json.dumps(
+        document,
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+
+
+def _plan_hash(document: Mapping[str, object]) -> str:
+    payload = {key: value for key, value in document.items() if key != "plan_id"}
+    return sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
+
+
+def rehash_plan(document: Mapping[str, object]) -> dict[str, object]:
+    """Return a detached plan document with a newly calculated plan ID."""
+    try:
+        result = json.loads(_canonical_json(document))
+    except (TypeError, ValueError) as error:
+        raise CharacterizationError(f"plan cannot be hashed: {error}") from error
+    if not isinstance(result, dict):
+        raise CharacterizationError("characterization plan root must be an object")
+    result.pop("plan_id", None)
+    result["plan_id"] = _plan_hash(result)
+    return result
+
+
+def _parameter_document(config: LiveHardwareConfig) -> list[dict[str, object]]:
+    return [
+        {
+            "name": field.name,
+            "channel0_address": field.channel0_address,
+            "bit_start": field.bit_start,
+            "bits": field.bits,
+            "safety_min": field.safety_min,
+            "safety_max": field.safety_max,
+            "max_step": field.max_step,
+        }
+        for field in config.characterization.parameters
+    ]
+
+
+def create_baseline_plan(
+    config: LiveHardwareConfig,
+    *,
+    repeats: int = 5,
+    created_at_utc: datetime | None = None,
+) -> dict[str, object]:
+    """Create an offline immutable baseline acquisition plan."""
+    if type(repeats) is not int or repeats <= 0:
+        raise ValueError("repeats must be a positive integer")
+    created = created_at_utc or datetime.now(timezone.utc)
+    if created.tzinfo is None:
+        raise ValueError("created_at_utc must be timezone-aware")
+    er = config.characterization.er
+    tdecq = config.characterization.tdecq
+    plan: dict[str, object] = {
+        "schema_version": SCHEMA_VERSION,
+        "kind": "baseline",
+        "created_at_utc": created.astimezone(timezone.utc).isoformat(),
+        "hardware": {
+            "dca": {
+                "resource": config.dca.resource,
+                "expected_idn_prefix": config.dca.expected_idn_prefix,
+                "function": config.dca.function,
+                "tdecq_source": tdecq.source,
+                "timeout_ms": config.dca.timeout_ms,
+            },
+            "bert": {
+                "ip": config.bert.ip,
+                "udp_port": config.bert.udp_port,
+                "port": config.bert.port,
+                "channel": config.bert.channel,
+            },
+            "i2c": {
+                "port": config.i2c.port,
+                "baudrate": config.i2c.baudrate,
+                "device_address": config.i2c.device_address,
+                "expected_chip_id": config.i2c.expected_chip_id,
+                "expected_chip_revision": config.i2c.expected_chip_revision,
+            },
+            "er": {
+                "source": er.source,
+                "value_query": er.value_query,
+                "source_query": er.source_query,
+                "status_query": er.status_query,
+                "details_query": er.details_query,
+                "units_query": er.units_query,
+            },
+            "i2c_parameters": _parameter_document(config),
+        },
+        "parameters": {
+            "channel": config.characterization.default_channel,
+            "repeats": repeats,
+            "measurement_timeout_s": config.characterization.measurement_timeout_s,
+            "poll_interval_s": config.characterization.poll_interval_s,
+            "meaningful_er_floor_db": (
+                config.characterization.meaningful_er_floor_db
+            ),
+            "meaningful_tdecq_floor_db": (
+                config.characterization.meaningful_tdecq_floor_db
+            ),
+        },
+        "safety": {
+            "dca_mutations": [
+                f":MEASure:EYE:OER:SOURce {er.source}",
+                f":MEASure:EYE:TDEQ:SOURce {tdecq.source}",
+                ":ACQuire:STOP",
+                ":ACQuire:CDISplay",
+                ":ACQuire:SINGle",
+            ],
+            "i2c_write_allowed": False,
+            "bert_write_allowed": False,
+        },
+    }
+    plan["plan_id"] = _plan_hash(plan)
+    return plan
+
+
+def _require_mapping(value: object, label: str) -> Mapping[str, object]:
+    if not isinstance(value, Mapping):
+        raise CharacterizationError(f"{label} must be an object")
+    return value
+
+
+def _require_number(value: object, label: str, *, positive: bool = False) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CharacterizationError(f"{label} must be numeric")
+    result = float(value)
+    if not isfinite(result) or (positive and result <= 0):
+        raise CharacterizationError(f"{label} must be finite and positive")
+    return result
+
+
+def _utc_text(now_utc: Callable[[], datetime]) -> str:
+    value = now_utc()
+    if value.tzinfo is None:
+        raise CharacterizationError("now_utc must return a timezone-aware datetime")
+    return value.astimezone(timezone.utc).isoformat()
+
+
+def _bert_document(configuration: BertConfiguration) -> dict[str, object]:
+    return {
+        "port": configuration.port,
+        "channel": configuration.channel,
+        "fir_taps": list(configuration.taps),
+        "upper_nlc": configuration.upper_nlc,
+        "lower_nlc": configuration.lower_nlc,
+        "raw_response": configuration.raw_response,
+    }
+
+
+def _field_document(values: Sequence[Vd1124FieldValue]) -> dict[str, object]:
+    return {
+        value.name: {
+            "channel": value.channel,
+            "address": value.address,
+            "raw_value": value.raw_value,
+            "value": value.value,
+        }
+        for value in values
+    }
+
+
+def _parameter_configs(plan: Mapping[str, object]) -> tuple[ParameterFieldConfig, ...]:
+    hardware = _require_mapping(plan.get("hardware"), "plan hardware")
+    raw_parameters = hardware.get("i2c_parameters")
+    if not isinstance(raw_parameters, list) or not raw_parameters:
+        raise CharacterizationError("plan i2c_parameters must be a non-empty list")
+    fields: list[ParameterFieldConfig] = []
+    try:
+        for raw in raw_parameters:
+            item = _require_mapping(raw, "I2C parameter")
+            fields.append(
+                ParameterFieldConfig(
+                    name=str(item["name"]),
+                    channel0_address=int(item["channel0_address"]),
+                    bit_start=int(item["bit_start"]),
+                    bits=int(item["bits"]),
+                    safety_min=(
+                        None if item.get("safety_min") is None else int(item["safety_min"])
+                    ),
+                    safety_max=(
+                        None if item.get("safety_max") is None else int(item["safety_max"])
+                    ),
+                    max_step=(
+                        None if item.get("max_step") is None else int(item["max_step"])
+                    ),
+                )
+            )
+    except (KeyError, TypeError, ValueError) as error:
+        raise CharacterizationError(f"invalid I2C parameter definition: {error}") from error
+    return tuple(fields)
+
+
+def _verify_identity(
+    identity: Vd1124ProbeResult, i2c_plan: Mapping[str, object]
+) -> None:
+    if not identity.matched:
+        raise CharacterizationError("I2C identity probe did not match")
+    expected_port = str(i2c_plan.get("port"))
+    expected_id = i2c_plan.get("expected_chip_id")
+    expected_revision = i2c_plan.get("expected_chip_revision")
+    if (
+        identity.port.upper() != expected_port.upper()
+        or identity.chip_id != expected_id
+        or identity.chip_revision != expected_revision
+    ):
+        raise CharacterizationError("I2C identity does not match the approved plan")
+
+
+def _safe_query(session: QuerySession, command: str) -> str:
+    try:
+        value = session.query(command)
+    except Exception as error:
+        raise CharacterizationError(f"DCA query {command!r} failed: {error}") from error
+    if not isinstance(value, str):
+        raise CharacterizationError(f"DCA query {command!r} did not return text")
+    return value
+
+
+def _safe_write(session: QuerySession, command: str) -> None:
+    try:
+        session.write(command)
+    except Exception as error:
+        raise CharacterizationError(f"DCA command {command!r} failed: {error}") from error
+
+
+def _read_source_bound_oer_status(
+    session: QuerySession, config: ErMeasurementConfig
+) -> str:
+    """Select, verify, and immediately query the Outer ER status."""
+    select_oer_source(session, config)
+    return _safe_query(session, config.status_query).strip().upper()
+
+
+def _read_source_bound_tdecq_status(
+    session: QuerySession, measurement_source: str
+) -> str:
+    """Select, verify, and immediately query the TDECQ status."""
+    select_tdecq_source(session, measurement_source=measurement_source)
+    return _safe_query(session, ":MEASure:EYE:TDEQ:STATus?").strip().upper()
+
+
+def _measurement_record(
+    *,
+    requested_source: str,
+    verified_source: str | None,
+    status: str,
+    value: float | None,
+    details: str,
+) -> dict[str, object]:
+    return {
+        "requested_source": requested_source,
+        "verified_source": verified_source,
+        "status": status,
+        "value": value,
+        "details": details,
+    }
+
+
+def _measurement_error_record(
+    error: DcaReadError,
+    *,
+    requested_source: str,
+    source_query: str,
+    status_query: str,
+    details_query: str,
+) -> dict[str, object]:
+    raw = error.raw_responses
+    if isinstance(error, DcaSourceMismatchError):
+        verified_source: str | None = error.current_source
+        status = "SOURCE_MISMATCH"
+    else:
+        raw_source = raw.get(source_query)
+        verified_source = raw_source.strip().upper() if raw_source else None
+        raw_status = raw.get(status_query)
+        status = raw_status.strip().upper() if raw_status else "INV"
+    raw_details = raw.get(details_query)
+    details = raw_details.strip() if raw_details else str(error)
+    return _measurement_record(
+        requested_source=requested_source,
+        verified_source=verified_source,
+        status=status,
+        value=None,
+        details=details,
+    )
+
+
+def _source_mismatch_measurement_records(
+    error: DcaSourceMismatchError,
+    *,
+    er_config: ErMeasurementConfig,
+    tdecq_source: str,
+) -> dict[str, dict[str, object]]:
+    details = f"Not read because {error.measurement} source verification failed"
+    records = {
+        "outer_er": _measurement_record(
+            requested_source=er_config.source,
+            verified_source=None,
+            status="NOT_READ",
+            value=None,
+            details=details,
+        ),
+        "tdecq": _measurement_record(
+            requested_source=tdecq_source,
+            verified_source=None,
+            status="NOT_READ",
+            value=None,
+            details=details,
+        ),
+    }
+    if error.measurement == "outer_er":
+        records["outer_er"] = _measurement_error_record(
+            error,
+            requested_source=er_config.source,
+            source_query=er_config.source_query,
+            status_query=er_config.status_query,
+            details_query=er_config.details_query,
+        )
+    else:
+        records["tdecq"] = _measurement_error_record(
+            error,
+            requested_source=tdecq_source,
+            source_query=":MEASure:EYE:TDEQ:SOURce?",
+            status_query=":MEASure:EYE:TDEQ:STATus?",
+            details_query=":MEASure:EYE:TDEQ:STATus:DETails?",
+        )
+    return records
+
+
+def execute_baseline_plan(
+    plan: Mapping[str, object],
+    dca_session: QuerySession,
+    bert_client: object,
+    i2c_reader: object,
+    i2c_identity: Vd1124ProbeResult,
+    *,
+    allow_execute: bool,
+    confirmation_id: str,
+    monotonic_ns: Callable[[], int] = time.monotonic_ns,
+    wait: Callable[[float], None] = time.sleep,
+    now_utc: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
+) -> dict[str, object]:
+    """Execute a source-bound read-only baseline acquisition plan."""
+    validate_characterization_plan(plan, expected_kind="baseline")
+    if allow_execute is not True:
+        raise CharacterizationError("baseline execution requires allow_execute=True")
+    if not isinstance(confirmation_id, str) or not hmac.compare_digest(
+        confirmation_id, str(plan["plan_id"])
+    ):
+        raise CharacterizationError("confirmation ID does not match the baseline plan")
+
+    hardware = _require_mapping(plan["hardware"], "plan hardware")
+    parameters = _require_mapping(plan["parameters"], "plan parameters")
+    dca_plan = _require_mapping(hardware.get("dca"), "plan DCA")
+    bert_plan = _require_mapping(hardware.get("bert"), "plan BERT")
+    i2c_plan = _require_mapping(hardware.get("i2c"), "plan I2C")
+    er_plan = _require_mapping(hardware.get("er"), "plan ER")
+    _verify_identity(i2c_identity, i2c_plan)
+
+    repeats = parameters.get("repeats")
+    channel = parameters.get("channel")
+    if type(repeats) is not int or repeats <= 0:
+        raise CharacterizationError("baseline repeats must be a positive integer")
+    if type(channel) is not int or not 0 <= channel <= 3:
+        raise CharacterizationError("baseline channel must be from 0 through 3")
+    timeout_s = _require_number(
+        parameters.get("measurement_timeout_s"),
+        "measurement_timeout_s",
+        positive=True,
+    )
+    poll_interval_s = _require_number(
+        parameters.get("poll_interval_s"), "poll_interval_s", positive=True
+    )
+    function = dca_plan.get("function")
+    source = dca_plan.get("tdecq_source")
+    if type(function) is not int or not isinstance(source, str):
+        raise CharacterizationError("baseline DCA function/source are invalid")
+    if function != 1 or source.strip().upper() != "FUNC1":
+        raise CharacterizationError("baseline TDECQ source must be FUNC1")
+    er_config = ErMeasurementConfig(
+        source=str(er_plan.get("source")),
+        value_query=str(er_plan.get("value_query")),
+        source_query=str(er_plan.get("source_query")),
+        status_query=str(er_plan.get("status_query")),
+        details_query=str(er_plan.get("details_query")),
+        units_query=str(er_plan.get("units_query")),
+    )
+    if er_config.source.strip().upper() != "CHAN1A":
+        raise CharacterizationError("baseline Outer ER source must be CHAN1A")
+    fields = _parameter_configs(plan)
+
+    bert_port = str(bert_plan.get("port"))
+    bert_channel = str(bert_plan.get("channel"))
+    try:
+        initial_bert = bert_client.get_configuration(bert_port, bert_channel)
+        initial_fields = i2c_reader.read_fields(fields, channel=channel)
+    except Exception as error:
+        raise CharacterizationError(f"initial read-only snapshot failed: {error}") from error
+    initial_snapshot = {
+        "timestamp_utc": _utc_text(now_utc),
+        "dca_idn": _safe_query(dca_session, "*IDN?").strip(),
+        "i2c_identity": {
+            "port": i2c_identity.port,
+            "chip_id": i2c_identity.chip_id,
+            "chip_revision": i2c_identity.chip_revision,
+            "matched": i2c_identity.matched,
+        },
+        "bert": _bert_document(initial_bert),
+        "i2c_parameters": _field_document(initial_fields),
+    }
+    expected_idn_prefix = dca_plan.get("expected_idn_prefix")
+    if (
+        not isinstance(expected_idn_prefix, str)
+        or not str(initial_snapshot["dca_idn"]).startswith(expected_idn_prefix)
+    ):
+        raise CharacterizationError(
+            "DCA identity does not match the approved expected IDN prefix"
+        )
+    if (
+        initial_bert.port != bert_port
+        or initial_bert.channel != bert_channel
+        or not initial_bert.raw_response.strip()
+    ):
+        raise CharacterizationError(
+            "BERT configuration identity/target does not match the approved plan"
+        )
+    initial_bert_state = _bert_document(initial_bert)
+    initial_field_state = _field_document(initial_fields)
+
+    source_select = f":MEASure:EYE:TDEQ:SOURce {source}"
+    _safe_write(dca_session, source_select)
+    verified_source = _safe_query(
+        dca_session, ":MEASure:EYE:TDEQ:SOURce?"
+    ).strip().upper()
+    if verified_source != source.strip().upper():
+        raise CharacterizationError(
+            "DCA TDECQ source readback does not match plan "
+            f"(requested={source.strip().upper()}, current={verified_source or '<empty>'})"
+        )
+
+    run_id = str(plan["plan_id"])[:12]
+    events: list[dict[str, object]] = [
+        {"event": "baseline_started", "timestamp_utc": _utc_text(now_utc)}
+    ]
+    measurements: list[dict[str, object]] = []
+    raw_responses: dict[str, object] = {
+        "initial": {
+            "dca_idn": initial_snapshot["dca_idn"],
+            "tdecq_source": verified_source,
+        }
+    }
+
+    for repeat_index in range(1, repeats + 1):
+        total_start = monotonic_ns()
+        started_at = _utc_text(now_utc)
+        acquisition_duration_s = 0.0
+        for command in (":ACQuire:STOP", ":ACQuire:CDISplay"):
+            command_start = monotonic_ns()
+            _safe_write(dca_session, command)
+            acquisition_duration_s += (
+                monotonic_ns() - command_start
+            ) / 1e9
+        source_mismatch: DcaSourceMismatchError | None = None
+        cleared_er_status = "NOT_READ"
+        cleared_tdecq_status = "NOT_READ"
+        try:
+            cleared_er_status = _read_source_bound_oer_status(
+                dca_session, er_config
+            )
+            cleared_tdecq_status = _read_source_bound_tdecq_status(
+                dca_session, source
+            )
+        except DcaSourceMismatchError as error:
+            source_mismatch = error
+
+        er_status = "INV"
+        tdecq_status = "INV"
+        status_polls: list[dict[str, str]] = []
+        if source_mismatch is None:
+            if cleared_er_status == "CORR" or cleared_tdecq_status == "CORR":
+                raise CharacterizationError(
+                    "DCA Clear did not invalidate both ER and TDECQ results"
+                )
+            command_start = monotonic_ns()
+            _safe_write(dca_session, ":ACQuire:SINGle")
+            acquisition_duration_s += (monotonic_ns() - command_start) / 1e9
+
+            wait_start = monotonic_ns()
+            deadline = wait_start + int(timeout_s * 1e9)
+            while monotonic_ns() < deadline:
+                try:
+                    er_status = _read_source_bound_oer_status(
+                        dca_session, er_config
+                    )
+                    tdecq_status = _read_source_bound_tdecq_status(
+                        dca_session, source
+                    )
+                except DcaSourceMismatchError as error:
+                    source_mismatch = error
+                    if error.measurement == "outer_er":
+                        er_status = "SOURCE_MISMATCH"
+                        tdecq_status = "NOT_READ"
+                    else:
+                        tdecq_status = "SOURCE_MISMATCH"
+                    status_polls.append(
+                        {"er_status": er_status, "tdecq_status": tdecq_status}
+                    )
+                    break
+                status_polls.append(
+                    {"er_status": er_status, "tdecq_status": tdecq_status}
+                )
+                if er_status == "CORR" and tdecq_status == "CORR":
+                    break
+                wait(poll_interval_s)
+            wait_duration_s = (monotonic_ns() - wait_start) / 1e9
+        else:
+            if source_mismatch.measurement == "outer_er":
+                er_status = "SOURCE_MISMATCH"
+                tdecq_status = "NOT_READ"
+            else:
+                er_status = cleared_er_status
+                tdecq_status = "SOURCE_MISMATCH"
+            wait_duration_s = 0.0
+
+        query_start = monotonic_ns()
+        er_db: float | None = None
+        tdecq_db: float | None = None
+        er_details = ""
+        tdecq_details = ""
+        invalid_reason: str | None = None
+        repeat_raw: dict[str, object] = {
+            "cleared_er_status": cleared_er_status,
+            "cleared_tdecq_status": cleared_tdecq_status,
+            "status_polls": status_polls,
+            "measurements": {},
+        }
+        measurement_records = repeat_raw["measurements"]
+        assert isinstance(measurement_records, dict)
+        if source_mismatch is not None:
+            invalid_reason = f"DCA source validation failed: {source_mismatch}"
+            repeat_raw["source_validation_error"] = {
+                "message": str(source_mismatch),
+                "raw_responses": dict(source_mismatch.raw_responses),
+            }
+            mismatch_records = _source_mismatch_measurement_records(
+                source_mismatch,
+                er_config=er_config,
+                tdecq_source=source,
+            )
+            measurement_records.update(mismatch_records)
+            er_status = str(mismatch_records["outer_er"]["status"])
+            er_details = str(mismatch_records["outer_er"]["details"])
+            tdecq_status = str(mismatch_records["tdecq"]["status"])
+            tdecq_details = str(mismatch_records["tdecq"]["details"])
+        elif er_status == "CORR" and tdecq_status == "CORR":
+            er_snapshot = None
+            tdecq_snapshot = None
+            try:
+                er_snapshot = read_verified_oer(dca_session, er_config)
+            except DcaReadError as error:
+                invalid_reason = f"DCA result validation failed: {error}"
+                repeat_raw["er_validation_error"] = {
+                    "message": str(error),
+                    "raw_responses": dict(error.raw_responses),
+                }
+                er_record = _measurement_error_record(
+                    error,
+                    requested_source=er_config.source,
+                    source_query=er_config.source_query,
+                    status_query=er_config.status_query,
+                    details_query=er_config.details_query,
+                )
+                measurement_records["outer_er"] = er_record
+                er_status = str(er_record["status"])
+                er_details = str(er_record["details"])
+            else:
+                er_status = er_snapshot.status
+                er_details = er_snapshot.details
+                repeat_raw["er"] = dict(er_snapshot.raw_responses)
+                measurement_records["outer_er"] = _measurement_record(
+                    requested_source=er_config.source,
+                    verified_source=er_snapshot.source,
+                    status=er_snapshot.status,
+                    value=er_snapshot.value_db,
+                    details=er_snapshot.details,
+                )
+                if not er_snapshot.valid:
+                    invalid_reason = er_snapshot.invalid_reason
+            try:
+                tdecq_snapshot = read_verified_tdecq(
+                    dca_session, function, measurement_source=source
+                )
+            except DcaReadError as error:
+                error_record = _measurement_error_record(
+                    error,
+                    requested_source=source,
+                    source_query=":MEASure:EYE:TDEQ:SOURce?",
+                    status_query=":MEASure:EYE:TDEQ:STATus?",
+                    details_query=":MEASure:EYE:TDEQ:STATus:DETails?",
+                )
+                measurement_records["tdecq"] = error_record
+                tdecq_status = str(error_record["status"])
+                tdecq_details = str(error_record["details"])
+                invalid_reason = f"DCA result validation failed: {error}"
+                repeat_raw["tdecq_validation_error"] = {
+                    "message": str(error),
+                    "raw_responses": dict(error.raw_responses),
+                }
+            else:
+                tdecq_status = tdecq_snapshot.status
+                tdecq_details = tdecq_snapshot.details
+                repeat_raw["tdecq"] = dict(tdecq_snapshot.raw_responses)
+                measurement_records["tdecq"] = _measurement_record(
+                    requested_source=source,
+                    verified_source=tdecq_snapshot.verified_measurement_source,
+                    status=tdecq_snapshot.status,
+                    value=tdecq_snapshot.tdecq_db,
+                    details=tdecq_snapshot.details,
+                )
+            if (
+                invalid_reason is None
+                and er_snapshot is not None
+                and er_snapshot.valid
+                and tdecq_snapshot is not None
+            ):
+                er_db = er_snapshot.value_db
+                tdecq_db = tdecq_snapshot.tdecq_db
+        else:
+            invalid_reason = (
+                f"timeout waiting for CORR after {timeout_s:g}s "
+                f"(ER={er_status}, TDECQ={tdecq_status})"
+            )
+            try:
+                timeout_er = read_verified_oer(dca_session, er_config)
+            except DcaReadError as error:
+                er_record = _measurement_error_record(
+                    error,
+                    requested_source=er_config.source,
+                    source_query=er_config.source_query,
+                    status_query=er_config.status_query,
+                    details_query=er_config.details_query,
+                )
+                repeat_raw["timeout_er"] = dict(error.raw_responses)
+            else:
+                er_record = _measurement_record(
+                    requested_source=er_config.source,
+                    verified_source=timeout_er.source,
+                    status=timeout_er.status,
+                    value=None,
+                    details=timeout_er.details,
+                )
+                repeat_raw["timeout_er"] = dict(timeout_er.raw_responses)
+            measurement_records["outer_er"] = er_record
+            er_details = str(er_record["details"])
+
+            try:
+                timeout_tdecq = read_verified_tdecq(
+                    dca_session, function, measurement_source=source
+                )
+            except DcaReadError as error:
+                tdecq_record = _measurement_error_record(
+                    error,
+                    requested_source=source,
+                    source_query=":MEASure:EYE:TDEQ:SOURce?",
+                    status_query=":MEASure:EYE:TDEQ:STATus?",
+                    details_query=":MEASure:EYE:TDEQ:STATus:DETails?",
+                )
+                repeat_raw["timeout_tdecq"] = dict(error.raw_responses)
+            else:
+                tdecq_record = _measurement_record(
+                    requested_source=source,
+                    verified_source=timeout_tdecq.verified_measurement_source,
+                    status="LATE_CORR",
+                    value=None,
+                    details=timeout_tdecq.details,
+                )
+                repeat_raw["timeout_tdecq"] = dict(
+                    timeout_tdecq.raw_responses
+                )
+            measurement_records["tdecq"] = tdecq_record
+            tdecq_details = str(tdecq_record["details"])
+        query_duration_s = (monotonic_ns() - query_start) / 1e9
+
+        try:
+            round_bert = bert_client.get_configuration(bert_port, bert_channel)
+            round_fields = i2c_reader.read_fields(fields, channel=channel)
+        except Exception as error:
+            raise CharacterizationError(f"round readback failed: {error}") from error
+        round_bert_state = _bert_document(round_bert)
+        round_field_state = _field_document(round_fields)
+        stable = (
+            round_bert_state == initial_bert_state
+            and round_field_state == initial_field_state
+        )
+        if not stable:
+            invalid_reason = "BERT or I2C state changed during read-only baseline"
+            er_db = None
+            tdecq_db = None
+        finished_at = _utc_text(now_utc)
+        total_duration_s = (monotonic_ns() - total_start) / 1e9
+        field_values = {value.name: value.value for value in round_fields}
+        observation_valid = invalid_reason is None and er_db is not None and tdecq_db is not None
+        row: dict[str, object] = {
+            "run_id": run_id,
+            "stage": "baseline",
+            "repeat_index": repeat_index,
+            "started_at_utc": started_at,
+            "finished_at_utc": finished_at,
+            "acquisition_duration_s": acquisition_duration_s,
+            "wait_for_valid_duration_s": wait_duration_s,
+            "query_duration_s": query_duration_s,
+            "total_duration_s": total_duration_s,
+            "requested_settle_s": None,
+            "actual_settle_s": None,
+            "er_db": er_db,
+            "er_status": er_status,
+            "er_details": er_details,
+            "tdecq_db": tdecq_db,
+            "tdecq_status": tdecq_status,
+            "tdecq_details": tdecq_details,
+            "observation_valid": observation_valid,
+            "invalid_reason": invalid_reason,
+            "bert_fir_taps": list(round_bert.taps),
+            "dca_measurement_source": source,
+            **field_values,
+        }
+        measurements.append(row)
+        repeat_raw["bert"] = round_bert_state
+        repeat_raw["i2c_parameters"] = round_field_state
+        raw_responses[f"repeat_{repeat_index}"] = repeat_raw
+        events.append(
+            {
+                "event": "baseline_repeat_completed",
+                "repeat_index": repeat_index,
+                "valid": observation_valid,
+                "timestamp_utc": finished_at,
+            }
+        )
+
+    final_bert = bert_client.get_configuration(bert_port, bert_channel)
+    # The final field state is the state already read after the final round. This
+    # preserves exactly one parameter readback per completed acquisition.
+    final_snapshot = {
+        "timestamp_utc": _utc_text(now_utc),
+        "dca_idn": initial_snapshot["dca_idn"],
+        "i2c_identity": initial_snapshot["i2c_identity"],
+        "bert": _bert_document(final_bert),
+        "i2c_parameters": round_field_state,
+    }
+    if final_snapshot["bert"] != initial_bert_state:
+        raise CharacterizationError("BERT state changed during read-only baseline")
+    summary = summarize_measurements(measurements)
+    convergence = build_convergence_defaults(
+        summary,
+        er_floor_db=parameters.get("meaningful_er_floor_db"),
+        tdecq_floor_db=parameters.get("meaningful_tdecq_floor_db"),
+        repeats=repeats,
+    )
+    events.append({"event": "baseline_completed", "timestamp_utc": _utc_text(now_utc)})
+    valid_count = summary["valid_count"]
+    report = (
+        "# Baseline Characterization / 基线表征\n\n"
+        f"- Status / 状态: COMPLETED\n"
+        f"- Valid observations / 有效观测: {valid_count}/{repeats}\n"
+        "- Hardware writes / 硬件写入: DCA acquisition control only; "
+        "no BERT or I2C writes / 仅 DCA 采集控制；无 BERT 或 I2C 写入\n"
+    )
+    return {
+        "status": "COMPLETED",
+        "run_id": run_id,
+        "plan": dict(plan),
+        "events": events,
+        "measurements": measurements,
+        "raw_responses": raw_responses,
+        "initial_snapshot": initial_snapshot,
+        "final_snapshot": final_snapshot,
+        "summary": summary,
+        "convergence_defaults": convergence,
+        "report_markdown": report,
+    }
+
+
+def _read_parameter_snapshot(
+    reader: object,
+    fields: tuple[ParameterFieldConfig, ...],
+    channel: int,
+) -> tuple[Vd1124FieldValue, ...]:
+    try:
+        values = reader.read_fields(fields, channel=channel)
+    except Exception as error:
+        raise CharacterizationError(f"I2C parameter readback failed: {error}") from error
+    if not isinstance(values, Sequence) or len(values) != len(fields):
+        raise CharacterizationError("I2C parameter readback is incomplete")
+    return tuple(values)
+
+
+def _operation_document(
+    field: ParameterFieldConfig,
+    value: Vd1124FieldValue,
+    *,
+    new_value: int,
+) -> dict[str, object]:
+    return {
+        "name": field.name,
+        "channel": value.channel,
+        "address": value.address,
+        "bit_start": field.bit_start,
+        "bits": field.bits,
+        "old_raw": value.raw_value,
+        "old_value": value.value,
+        "new_value": new_value,
+        "safety_min": field.safety_min,
+        "safety_max": field.safety_max,
+        "max_step": field.max_step,
+    }
+
+
+def _config_plan_base(
+    config: LiveHardwareConfig,
+    *,
+    kind: str,
+    channel: int,
+    created_at_utc: datetime | None,
+) -> dict[str, object]:
+    baseline = create_baseline_plan(
+        config, repeats=config.characterization.baseline_repeats,
+        created_at_utc=created_at_utc,
+    )
+    baseline.pop("plan_id", None)
+    baseline["kind"] = kind
+    parameters = _require_mapping(baseline["parameters"], "plan parameters")
+    # This is a plain dict produced locally by create_baseline_plan.
+    parameters["channel"] = channel  # type: ignore[index]
+    return baseline
+
+
+def create_same_value_plan(
+    config: LiveHardwareConfig,
+    i2c_reader: object,
+    i2c_identity: Vd1124ProbeResult,
+    *,
+    channel: int,
+    created_at_utc: datetime | None = None,
+) -> dict[str, object]:
+    """Read the nine fields and create an immutable same-value write plan."""
+    if type(channel) is not int or not 0 <= channel <= 3:
+        raise ValueError("channel must be an integer from 0 through 3")
+    base = _config_plan_base(
+        config, kind="same-value", channel=channel,
+        created_at_utc=created_at_utc,
+    )
+    hardware = _require_mapping(base["hardware"], "plan hardware")
+    _verify_identity(
+        i2c_identity, _require_mapping(hardware["i2c"], "plan I2C")
+    )
+    fields = config.characterization.parameters
+    values = _read_parameter_snapshot(i2c_reader, fields, channel)
+    base["operations"] = [
+        _operation_document(field, value, new_value=value.value)
+        for field, value in zip(fields, values, strict=True)
+    ]
+    base["creation_snapshot"] = {
+        "i2c_identity": {
+            "port": i2c_identity.port,
+            "chip_id": i2c_identity.chip_id,
+            "chip_revision": i2c_identity.chip_revision,
+        },
+        "i2c_parameters": _field_document(values),
+    }
+    base["safety"] = {
+        "i2c_write_allowed": "same-value-only",
+        "bert_write_allowed": False,
+        "requires_apply": True,
+        "prohibited_register_classes": [
+            "disable", "mute", "power", "OTP", "fault-mask"
+        ],
+    }
+    return rehash_plan(base)
+
+
+def _validate_apply(
+    plan: Mapping[str, object],
+    *,
+    expected_kind: str,
+    allow_apply: bool,
+    confirmation_id: str,
+) -> None:
+    validate_characterization_plan(plan, expected_kind=expected_kind)
+    if allow_apply is not True:
+        raise CharacterizationError(f"{expected_kind} execution requires --apply")
+    if not isinstance(confirmation_id, str) or not hmac.compare_digest(
+        confirmation_id, str(plan["plan_id"])
+    ):
+        raise CharacterizationError("confirmation ID does not match the plan")
+
+
+def _preflight_operations(
+    plan: Mapping[str, object], writer: object, identity: Vd1124ProbeResult
+) -> tuple[tuple[ParameterFieldConfig, ...], int, tuple[Vd1124FieldValue, ...]]:
+    hardware = _require_mapping(plan["hardware"], "plan hardware")
+    _verify_identity(identity, _require_mapping(hardware["i2c"], "plan I2C"))
+    parameters = _require_mapping(plan["parameters"], "plan parameters")
+    channel = parameters.get("channel")
+    if type(channel) is not int or not 0 <= channel <= 3:
+        raise CharacterizationError("plan channel is invalid")
+    fields = _parameter_configs(plan)
+    current = _read_parameter_snapshot(writer, fields, channel)
+    creation = _require_mapping(
+        plan.get("creation_snapshot"), "plan creation_snapshot"
+    )
+    created_fields = _require_mapping(
+        creation.get("i2c_parameters"), "creation I2C parameters"
+    )
+    for value in current:
+        created = _require_mapping(
+            created_fields.get(value.name), f"creation field {value.name}"
+        )
+        if (
+            created.get("value") != value.value
+            or created.get("raw_value") != value.raw_value
+            or created.get("address") != value.address
+            or created.get("channel") != value.channel
+        ):
+            raise CharacterizationError(
+                f"stale I2C state for {value.name}: creation snapshot no longer matches"
+            )
+    operations = plan.get("operations")
+    if not isinstance(operations, list):
+        raise CharacterizationError("plan operations must be a list")
+    expected = {str(item.get("name")): item for item in operations if isinstance(item, Mapping)}
+    for value in current:
+        operation = expected.get(value.name)
+        if operation is not None and (
+            operation.get("old_value") != value.value
+            or operation.get("old_raw") != value.raw_value
+            or operation.get("address") != value.address
+        ):
+            raise CharacterizationError(
+                f"stale I2C state for {value.name}: plan no longer matches readback"
+            )
+    return fields, channel, current
+
+
+def execute_same_value_plan(
+    plan: Mapping[str, object],
+    i2c_writer: object,
+    i2c_identity: Vd1124ProbeResult,
+    *,
+    allow_apply: bool,
+    confirmation_id: str,
+    monotonic_ns: Callable[[], int] = time.monotonic_ns,
+) -> dict[str, object]:
+    """Execute only exact old-value-to-same-value field writes."""
+    _validate_apply(
+        plan, expected_kind="same-value", allow_apply=allow_apply,
+        confirmation_id=confirmation_id,
+    )
+    try:
+        fields, channel, _ = _preflight_operations(plan, i2c_writer, i2c_identity)
+    except CharacterizationError as error:
+        return {
+            "status": "STALE_REJECTED",
+            "error": str(error),
+            "write_results": [],
+        }
+    operations = plan.get("operations")
+    assert isinstance(operations, list)
+    if len(operations) != len(fields):
+        raise CharacterizationError("same-value plan must contain all nine fields")
+    by_name = {field.name: field for field in fields}
+    operation_names = [
+        str(operation.get("name"))
+        for operation in operations
+        if isinstance(operation, Mapping)
+    ]
+    if len(operation_names) != len(operations) or set(operation_names) != set(by_name):
+        raise CharacterizationError(
+            "same-value plan must contain every configured field exactly once"
+        )
+    validated_operations: list[tuple[Mapping[str, object], ParameterFieldConfig]] = []
+    for operation in operations:
+        if not isinstance(operation, Mapping):
+            raise CharacterizationError("same-value operation must be an object")
+        name = str(operation.get("name"))
+        field = by_name[name]
+        old_value = operation.get("old_value")
+        old_raw = operation.get("old_raw")
+        if (
+            type(old_value) is not int
+            or operation.get("new_value") != old_value
+            or type(old_raw) is not int
+            or not 0 <= old_raw <= 0xFF
+            or operation.get("channel") != channel
+            or operation.get("address") != field.address_for_channel(channel)
+            or operation.get("bit_start") != field.bit_start
+            or operation.get("bits") != field.bits
+            or ((old_raw >> field.bit_start) & field.encoded_max) != old_value
+        ):
+            raise CharacterizationError(
+                f"same-value operation for {name} is inconsistent or changes value"
+            )
+        validated_operations.append((operation, field))
+    results: list[dict[str, object]] = []
+    for operation, field in validated_operations:
+        name = str(operation.get("name"))
+        old_value = operation.get("old_value")
+        new_value = operation.get("new_value")
+        old_raw = operation.get("old_raw")
+        assert type(old_value) is int and type(new_value) is int
+        assert type(old_raw) is int
+        try:
+            write_start = monotonic_ns()
+            written = i2c_writer.write_field(
+                field, channel=channel, value=new_value,
+                expected_current=old_value, expected_raw=old_raw,
+            )
+            write_readback_duration_s = (monotonic_ns() - write_start) / 1e9
+        except Exception as error:
+            return {
+                "status": "RECOVERY_REQUIRED",
+                "error": str(error),
+                "failed_parameter": name,
+                "write_results": results,
+            }
+        results.append({
+            "name": written.name,
+            "address": written.address,
+            "before_raw": written.before_raw,
+            "before_value": written.before_value,
+            "requested_value": written.requested_value,
+            "after_raw": written.after_raw,
+            "after_value": written.after_value,
+            "verified": written.verified,
+            "write_readback_duration_s": write_readback_duration_s,
+        })
+    return {"status": "VERIFIED", "write_results": results}
+
+
+def create_settle_plan(
+    config: LiveHardwareConfig,
+    i2c_reader: object,
+    i2c_identity: Vd1124ProbeResult,
+    *,
+    parameter: str,
+    target_value: int,
+    settle_delays: Sequence[float],
+    channel: int,
+    created_at_utc: datetime | None = None,
+) -> dict[str, object]:
+    """Create a one-parameter settling plan with explicit human limits."""
+    if type(channel) is not int or not 0 <= channel <= 3:
+        raise ValueError("channel must be an integer from 0 through 3")
+    if not isinstance(parameter, str) or not parameter.strip():
+        raise CharacterizationError("parameter must be explicitly provided")
+    if type(target_value) is not int:
+        raise CharacterizationError("target value must be an integer")
+    delays = tuple(_require_number(value, "settle delay") for value in settle_delays)
+    if not delays or any(value < 0 for value in delays):
+        raise CharacterizationError("settle delays must be non-empty and non-negative")
+    field = next(
+        (item for item in config.characterization.parameters if item.name == parameter),
+        None,
+    )
+    if field is None:
+        raise CharacterizationError(f"unknown parameter {parameter}")
+    if field.safety_min is None or field.safety_max is None or field.max_step is None:
+        raise CharacterizationError(f"{parameter} has no complete human safety limits")
+    if not 0 <= target_value <= field.encoded_max:
+        raise CharacterizationError(f"target value exceeds {parameter} encoding width")
+    if not field.safety_min <= target_value <= field.safety_max:
+        raise CharacterizationError(f"target value is outside {parameter} safety limits")
+
+    base = _config_plan_base(
+        config, kind="settle", channel=channel, created_at_utc=created_at_utc
+    )
+    hardware = _require_mapping(base["hardware"], "plan hardware")
+    _verify_identity(identity=i2c_identity, i2c_plan=_require_mapping(hardware["i2c"], "plan I2C"))
+    values = _read_parameter_snapshot(
+        i2c_reader, config.characterization.parameters, channel
+    )
+    current = next(value for value in values if value.name == parameter)
+    if target_value == current.value:
+        raise CharacterizationError("settle target must differ from the original value")
+    if abs(target_value - current.value) > field.max_step:
+        raise CharacterizationError(f"target step exceeds {parameter} max_step")
+    base["operations"] = [
+        _operation_document(field, current, new_value=target_value)
+    ]
+    parameters = _require_mapping(base["parameters"], "plan parameters")
+    parameters["parameter"] = parameter  # type: ignore[index]
+    parameters["target_value"] = target_value  # type: ignore[index]
+    parameters["settle_delays_s"] = list(delays)  # type: ignore[index]
+    parameters["repeats"] = len(delays)  # type: ignore[index]
+    base["creation_snapshot"] = {
+        "i2c_identity": {
+            "port": i2c_identity.port,
+            "chip_id": i2c_identity.chip_id,
+            "chip_revision": i2c_identity.chip_revision,
+        },
+        "i2c_parameters": _field_document(values),
+    }
+    base_safety = _require_mapping(base.get("safety"), "plan safety")
+    base["safety"] = {
+        "i2c_write_allowed": "one-parameter-and-one-restore",
+        "bert_write_allowed": False,
+        "requires_apply": True,
+        "automatic_safe_off_allowed": False,
+        "restore_attempts": 1,
+        "dca_mutations": list(base_safety.get("dca_mutations", [])),
+    }
+    base["measurement_plan"] = create_baseline_plan(
+        config, repeats=1, created_at_utc=created_at_utc
+    )
+    return rehash_plan(base)
+
+
+def execute_settle_plan(
+    plan: Mapping[str, object],
+    i2c_writer: object,
+    i2c_identity: Vd1124ProbeResult,
+    measure_once: Callable[[float], Mapping[str, object] | object],
+    *,
+    allow_apply: bool,
+    confirmation_id: str,
+    monotonic_ns: Callable[[], int] = time.monotonic_ns,
+    wait: Callable[[float], None] = time.sleep,
+) -> dict[str, object]:
+    """Apply one field, measure at delays, and restore exactly once in finally."""
+    _validate_apply(
+        plan, expected_kind="settle", allow_apply=allow_apply,
+        confirmation_id=confirmation_id,
+    )
+    fields, channel, _ = _preflight_operations(plan, i2c_writer, i2c_identity)
+    operations = plan.get("operations")
+    if not isinstance(operations, list) or len(operations) != 1:
+        raise CharacterizationError("settle plan must contain exactly one operation")
+    operation = _require_mapping(operations[0], "settle operation")
+    name = str(operation.get("name"))
+    old_value = operation.get("old_value")
+    target_value = operation.get("new_value")
+    if type(old_value) is not int or type(target_value) is not int:
+        raise CharacterizationError("settle old and target values must be integers")
+    field = next((item for item in fields if item.name == name), None)
+    if field is None:
+        raise CharacterizationError(f"unknown settle field {name}")
+    if field.safety_min is None or field.safety_max is None or field.max_step is None:
+        raise CharacterizationError(f"{name} has no complete human safety limits")
+    if not field.safety_min <= target_value <= field.safety_max:
+        raise CharacterizationError(f"target value is outside {name} safety limits")
+    if not 0 <= target_value <= field.encoded_max:
+        raise CharacterizationError(f"target value exceeds {name} encoding width")
+    if target_value == old_value:
+        raise CharacterizationError("settle target must differ from the original value")
+    if abs(target_value - old_value) > field.max_step:
+        raise CharacterizationError(f"target step exceeds {name} max_step")
+    parameters = _require_mapping(plan["parameters"], "plan parameters")
+    raw_delays = parameters.get("settle_delays_s")
+    if not isinstance(raw_delays, list) or not raw_delays:
+        raise CharacterizationError("settle plan has no delays")
+    delays = tuple(_require_number(value, "settle delay") for value in raw_delays)
+    if any(value < 0 for value in delays):
+        raise CharacterizationError("settle delays must be non-negative")
+    if parameters.get("repeats") != len(delays):
+        raise CharacterizationError("settle measurement count does not match delays")
+    old_raw = operation.get("old_raw")
+    if type(old_raw) is not int or not 0 <= old_raw <= 0xFF:
+        raise CharacterizationError("settle old raw byte is invalid")
+    if operation.get("address") != field.address_for_channel(channel):
+        raise CharacterizationError("settle address does not match parameter/channel")
+    mask = field.encoded_max << field.bit_start
+    target_raw = (old_raw & ~mask) | (target_value << field.bit_start)
+
+    measurements: list[dict[str, object]] = []
+    failure: BaseException | None = None
+    restoration_succeeded = False
+    restore_error: str | None = None
+    restore_required = False
+    target_write_readback_duration_s: float | None = None
+    restore_write_readback_duration_s: float | None = None
+    manual_recovery = {
+        "parameter": name,
+        "channel": channel,
+        "address": field.address_for_channel(channel),
+        "bit_start": field.bit_start,
+        "bits": field.bits,
+        "raw_value": old_raw,
+        "value": old_value,
+    }
+    try:
+        restore_required = True
+        target_write_start = monotonic_ns()
+        i2c_writer.write_field(
+            field, channel=channel, value=target_value,
+            expected_current=old_value, expected_raw=old_raw,
+        )
+        target_write_readback_duration_s = (
+            monotonic_ns() - target_write_start
+        ) / 1e9
+        for index, delay in enumerate(delays, start=1):
+            wait_start = monotonic_ns()
+            wait(delay)
+            actual_wait_s = (monotonic_ns() - wait_start) / 1e9
+            measured = measure_once(delay)
+            row = dict(measured) if isinstance(measured, Mapping) else {}
+            row.update({
+                "stage": "settle",
+                "repeat_index": index,
+                "requested_settle_s": delay,
+                "actual_settle_s": actual_wait_s,
+            })
+            measurements.append(row)
+    except BaseException as error:
+        failure = error
+    finally:
+        if restore_required:
+            try:
+                restore_start = monotonic_ns()
+                i2c_writer.write_field(
+                    field, channel=channel, value=old_value,
+                    expected_current=target_value, expected_raw=target_raw,
+                )
+                restore_write_readback_duration_s = (
+                    monotonic_ns() - restore_start
+                ) / 1e9
+                restored_fields = _read_parameter_snapshot(
+                    i2c_writer, fields, channel
+                )
+                creation = _require_mapping(
+                    plan.get("creation_snapshot"), "plan creation_snapshot"
+                )
+                created_fields = _require_mapping(
+                    creation.get("i2c_parameters"),
+                    "creation I2C parameters",
+                )
+                mismatches = []
+                for value in restored_fields:
+                    created = _require_mapping(
+                        created_fields.get(value.name),
+                        f"creation field {value.name}",
+                    )
+                    if (
+                        created.get("value") != value.value
+                        or created.get("raw_value") != value.raw_value
+                    ):
+                        mismatches.append(value.name)
+                if mismatches:
+                    raise CharacterizationError(
+                        "post-restore I2C mismatch: " + ", ".join(mismatches)
+                    )
+                restoration_succeeded = True
+            except BaseException as error:
+                restore_error = str(error)
+
+    if not restoration_succeeded:
+        return {
+            "status": "RECOVERY_REQUIRED",
+            "measurements": measurements,
+            "restoration_succeeded": False,
+            "error": str(failure) if failure is not None else restore_error,
+            "restore_error": restore_error,
+            "manual_recovery": manual_recovery,
+            "target_write_readback_duration_s": target_write_readback_duration_s,
+            "restore_write_readback_duration_s": restore_write_readback_duration_s,
+        }
+    if failure is not None:
+        return {
+            "status": "FAILED_RESTORED",
+            "measurements": measurements,
+            "restoration_succeeded": True,
+            "error": f"{type(failure).__name__}: {failure}",
+            "manual_recovery": None,
+            "target_write_readback_duration_s": target_write_readback_duration_s,
+            "restore_write_readback_duration_s": restore_write_readback_duration_s,
+        }
+    return {
+        "status": "COMPLETED_RESTORED",
+        "measurements": measurements,
+        "restoration_succeeded": True,
+        "manual_recovery": None,
+        "target_write_readback_duration_s": target_write_readback_duration_s,
+        "restore_write_readback_duration_s": restore_write_readback_duration_s,
+    }
+
+
+def validate_characterization_plan(
+    document: Mapping[str, object], *, expected_kind: str | None = None
+) -> Mapping[str, object]:
+    if document.get("schema_version") != SCHEMA_VERSION:
+        raise CharacterizationError("characterization plan schema does not match")
+    plan_id = document.get("plan_id")
+    if not isinstance(plan_id, str) or len(plan_id) != 64:
+        raise CharacterizationError("characterization plan ID is invalid")
+    try:
+        expected_id = _plan_hash(document)
+    except (TypeError, ValueError) as error:
+        raise CharacterizationError(f"plan cannot be hashed: {error}") from error
+    if not hmac.compare_digest(plan_id, expected_id):
+        raise CharacterizationError("characterization plan hash does not match")
+    if expected_kind is not None and document.get("kind") != expected_kind:
+        raise CharacterizationError(f"plan kind must be {expected_kind}")
+    for section in ("hardware", "parameters", "safety"):
+        if not isinstance(document.get(section), Mapping):
+            raise CharacterizationError(f"plan {section} must be an object")
+    return document
+
+
+def validate_plan_against_config(
+    document: Mapping[str, object], config: LiveHardwareConfig
+) -> None:
+    """Fail closed if a saved plan targets a different live configuration."""
+    validate_characterization_plan(document)
+    expected = create_baseline_plan(config, repeats=1)
+    if document.get("hardware") != expected.get("hardware"):
+        raise CharacterizationError("plan hardware target does not match live config")
+    parameters = _require_mapping(document.get("parameters"), "plan parameters")
+    expected_parameters = _require_mapping(
+        expected.get("parameters"), "expected parameters"
+    )
+    for key in (
+        "measurement_timeout_s",
+        "poll_interval_s",
+        "meaningful_er_floor_db",
+        "meaningful_tdecq_floor_db",
+    ):
+        if parameters.get(key) != expected_parameters.get(key):
+            raise CharacterizationError(
+                f"plan {key} does not match the current live config"
+            )
+
+
+def _atomic_json(path: Path, value: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+
+
+def save_characterization_plan(
+    document: Mapping[str, object], path: str | Path
+) -> Path:
+    validate_characterization_plan(document)
+    output = Path(path)
+    _atomic_json(output, document)
+    return output
+
+
+def load_characterization_plan(path: str | Path) -> dict[str, object]:
+    input_path = Path(path)
+    try:
+        value = json.loads(input_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise CharacterizationError(f"cannot load plan {input_path}: {error}") from error
+    if not isinstance(value, dict):
+        raise CharacterizationError("characterization plan root must be an object")
+    validate_characterization_plan(value)
+    return value
+
+
+def _finite_values(values: Sequence[object]) -> list[float]:
+    result: list[float] = []
+    for value in values:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        numeric = float(value)
+        if isfinite(numeric) and abs(numeric) < 9.0e37:
+            result.append(numeric)
+    return result
+
+
+def _metric_statistics(values: Sequence[object]) -> dict[str, object]:
+    numbers = _finite_values(values)
+    count = len(numbers)
+    if not numbers:
+        return {
+            "count": 0,
+            "mean": None,
+            "median": None,
+            "sample_std": None,
+            "min": None,
+            "max": None,
+            "range": None,
+            "insufficient_reason": "no valid samples",
+        }
+    minimum = min(numbers)
+    maximum = max(numbers)
+    return {
+        "count": count,
+        "mean": fmean(numbers),
+        "median": median(numbers),
+        "sample_std": stdev(numbers) if count >= 2 else None,
+        "min": minimum,
+        "max": maximum,
+        "range": maximum - minimum,
+        "insufficient_reason": (
+            None if count >= 2 else "at least two valid samples are required"
+        ),
+    }
+
+
+def _linear_percentile(numbers: Sequence[float], probability: float) -> float:
+    ordered = sorted(numbers)
+    if len(ordered) == 1:
+        return ordered[0]
+    position = probability * (len(ordered) - 1)
+    lower = floor(position)
+    fraction = position - lower
+    return ordered[lower] + fraction * (ordered[lower + 1] - ordered[lower])
+
+
+def _duration_statistics(values: Sequence[object]) -> dict[str, object]:
+    basic = _metric_statistics(values)
+    numbers = _finite_values(values)
+    return {
+        "count": basic["count"],
+        "mean": basic["mean"],
+        "median": basic["median"],
+        "p95": _linear_percentile(numbers, 0.95) if numbers else None,
+        "min": basic["min"],
+        "max": basic["max"],
+        "insufficient_reason": (
+            None if numbers else "no measured round durations"
+        ),
+    }
+
+
+def summarize_measurements(
+    measurements: Sequence[Mapping[str, object]],
+) -> dict[str, object]:
+    valid = [row for row in measurements if row.get("observation_valid") is True]
+    timeout_count = sum(
+        1
+        for row in measurements
+        if "timeout" in str(row.get("invalid_reason") or "").lower()
+    )
+    status_changes: list[dict[str, object]] = []
+    previous_status: tuple[object, object] | None = None
+    for row in measurements:
+        current_status = (row.get("er_status"), row.get("tdecq_status"))
+        if current_status != previous_status:
+            status_changes.append(
+                {
+                    "repeat_index": row.get("repeat_index"),
+                    "er_status": current_status[0],
+                    "tdecq_status": current_status[1],
+                }
+            )
+            previous_status = current_status
+    return {
+        "measurement_count": len(measurements),
+        "valid_count": len(valid),
+        "valid_ratio": (
+            len(valid) / len(measurements) if measurements else None
+        ),
+        "er_db": _metric_statistics([row.get("er_db") for row in valid]),
+        "tdecq_db": _metric_statistics(
+            [row.get("tdecq_db") for row in valid]
+        ),
+        "total_duration_s": _duration_statistics(
+            [row.get("total_duration_s") for row in measurements]
+        ),
+        "timeout_count": timeout_count,
+        "status_changes": status_changes,
+        "i2c_write_readback_consistent": None,
+        "restoration_succeeded": None,
+    }
+
+
+def build_convergence_defaults(
+    summary: Mapping[str, object],
+    *,
+    er_floor_db: float | None,
+    tdecq_floor_db: float | None,
+    repeats: int,
+) -> dict[str, object]:
+    er_stats = summary.get("er_db")
+    tdecq_stats = summary.get("tdecq_db")
+    duration_stats = summary.get("total_duration_s")
+    if not isinstance(er_stats, Mapping) or not isinstance(tdecq_stats, Mapping):
+        raise ValueError("summary metric statistics are missing")
+    er_sigma = er_stats.get("sample_std")
+    tdecq_sigma = tdecq_stats.get("sample_std")
+
+    def meaningful(sigma: object, floor_value: float | None) -> float | None:
+        if not isinstance(sigma, (int, float)) or isinstance(sigma, bool):
+            return None
+        noise = 3.0 * float(sigma)
+        return max(noise, floor_value) if floor_value is not None else noise
+
+    suggested_settle = None
+    if isinstance(duration_stats, Mapping):
+        p95 = duration_stats.get("p95")
+        if isinstance(p95, (int, float)) and not isinstance(p95, bool):
+            suggested_settle = float(p95)
+    return {
+        "status": "SUGGESTED_NOT_FINAL",
+        "method": "meaningful change = max(configured floor, 3 * sample sigma)",
+        "er_noise_sigma_db": er_sigma,
+        "tdecq_noise_sigma_db": tdecq_sigma,
+        "meaningful_er_change_db": meaningful(er_sigma, er_floor_db),
+        "meaningful_tdecq_change_db": meaningful(
+            tdecq_sigma, tdecq_floor_db
+        ),
+        "suggested_repeats": max(5, repeats),
+        "suggested_settle_time_s": suggested_settle,
+        "suggested_patience": 3,
+        "coarse_er_threshold_db": 2.5,
+        "fine_er_threshold_db": 3.0,
+    }
+
+
+_MEASUREMENT_COLUMNS = (
+    "run_id",
+    "stage",
+    "repeat_index",
+    "started_at_utc",
+    "finished_at_utc",
+    "acquisition_duration_s",
+    "wait_for_valid_duration_s",
+    "query_duration_s",
+    "total_duration_s",
+    "requested_settle_s",
+    "actual_settle_s",
+    "er_db",
+    "er_status",
+    "er_details",
+    "tdecq_db",
+    "tdecq_status",
+    "tdecq_details",
+    "observation_valid",
+    "invalid_reason",
+    "ibias_dac",
+    "efin_cur",
+    "vga_cur",
+    "eq",
+    "res_gain",
+    "res_bw",
+    "gain_ctrl",
+    "vbias_ref",
+    "vref",
+    "bert_fir_taps",
+    "dca_measurement_source",
+)
+
+
+def write_run_artifacts(
+    output_root: str | Path,
+    *,
+    run_id: str,
+    plan: Mapping[str, object],
+    events: Sequence[Mapping[str, object]],
+    measurements: Sequence[Mapping[str, object]],
+    raw_responses: Mapping[str, object],
+    initial_snapshot: Mapping[str, object],
+    final_snapshot: Mapping[str, object],
+    summary: Mapping[str, object],
+    convergence_defaults: Mapping[str, object],
+    report_markdown: str,
+    started_at_utc: datetime,
+) -> Path:
+    timestamp = started_at_utc.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    run_dir = Path(output_root) / f"{timestamp}-{run_id}"
+    try:
+        run_dir.mkdir(parents=True, exist_ok=False)
+    except OSError as error:
+        raise CharacterizationError(f"cannot create run directory: {error}") from error
+
+    try:
+        _atomic_json(run_dir / "plan.json", plan)
+        events_path = run_dir / "events.jsonl"
+        events_text = "".join(
+            json.dumps(event, ensure_ascii=False, allow_nan=False) + "\n"
+            for event in events
+        )
+        events_path.write_text(events_text, encoding="utf-8")
+        csv_path = run_dir / "measurements.csv"
+        with csv_path.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(
+                stream, fieldnames=_MEASUREMENT_COLUMNS, extrasaction="ignore"
+            )
+            writer.writeheader()
+            for row in measurements:
+                writer.writerow(dict(row))
+        _atomic_json(run_dir / "raw_responses.json", raw_responses)
+        _atomic_json(run_dir / "initial_snapshot.json", initial_snapshot)
+        _atomic_json(run_dir / "final_snapshot.json", final_snapshot)
+        _atomic_json(run_dir / "summary.json", summary)
+        _atomic_json(
+            run_dir / "convergence_defaults.json", convergence_defaults
+        )
+        (run_dir / "report.md").write_text(report_markdown, encoding="utf-8")
+    except (OSError, TypeError, ValueError) as error:
+        raise CharacterizationError(f"cannot persist audit artifacts: {error}") from error
+    return run_dir

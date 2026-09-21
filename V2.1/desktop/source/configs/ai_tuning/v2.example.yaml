@@ -1,0 +1,5 @@
+v2:
+  brain_mode: LOCAL_VISION_API
+  enabled_brain_modes:
+    - LOCAL_VISION_API
+  minimum_confidence: 0.70

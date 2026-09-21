@@ -1,0 +1,11 @@
+INFO:     Started server process [50964]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8766 (Press CTRL+C to quit)
+FastAPI exited with code -1.
+ËùÔÚÎ»ÖÃ C:\Users\NateS\Documents\VCSEL\.worktrees\v1.2-native-pilot-fast24-isolation\start-v1.1.ps1:324 ×Ö·û: 9
++         throw "FastAPI exited with code $($ServerProcess.ExitCode)."
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (FastAPI exited with code -1.:String) [], RuntimeException
+    + FullyQualifiedErrorId : FastAPI exited with code -1.
+ 

@@ -1,0 +1,32 @@
+{
+  "FAST24_SINGLE_RUN": {
+    "record_statuses": {
+      "COMPLETE": 29
+    },
+    "missing_items": {},
+    "requested_readback_mismatch_records": 0,
+    "missing_tdecq_or_er_records": 0
+  },
+  "SOAK_2H": {
+    "record_statuses": {
+      "COMPLETE": 517,
+      "PARTIAL": 63
+    },
+    "missing_items": {
+      "same_acquisition_proof": 63
+    },
+    "requested_readback_mismatch_records": 0,
+    "missing_tdecq_or_er_records": 0
+  },
+  "SOAK_8H": {
+    "record_statuses": {
+      "COMPLETE": 2036,
+      "PARTIAL": 284
+    },
+    "missing_items": {
+      "same_acquisition_proof": 284
+    },
+    "requested_readback_mismatch_records": 0,
+    "missing_tdecq_or_er_records": 0
+  }
+}

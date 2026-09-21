@@ -1,0 +1,23 @@
+# TEMPLATE ONLY. LIVE_TUNING can mutate hardware after backend authorization.
+# Replace every REVIEW_REQUIRED value and review the complete safety profile.
+mode: LIVE_TUNING
+api:
+  host: 127.0.0.1
+  port: 8000
+storage:
+  sqlite_path: ../../state/ai_tuning/campaigns.sqlite3
+  artifact_root: ../../artifacts/ai_tuning
+b0_path: b0.yaml
+measurement_timeout_s: 30.0
+worker_count: 2
+hardware:
+  driver_profile: REVIEW_REQUIRED-driver-profile.yaml
+  dca_visa_resource: REVIEW_REQUIRED-DCA-VISA-RESOURCE
+  i2c_com_port: REVIEW_REQUIRED-I2C-PORT
+  i2c_address: 0
+  bert_host: example.invalid
+  bert_port: 1
+  resource_ids:
+    - REVIEW_REQUIRED-DCA
+    - REVIEW_REQUIRED-I2C
+    - REVIEW_REQUIRED-BERT

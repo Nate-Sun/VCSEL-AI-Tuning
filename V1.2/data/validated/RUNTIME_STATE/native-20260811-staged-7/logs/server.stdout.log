@@ -1,0 +1,12 @@
+INFO:     127.0.0.1:51766 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51766 - "GET /capabilities HTTP/1.1" 200 OK
+VCSEL AI Tuning V1.2 is ready.
+Runtime mode: LIVE_TUNING
+URL: http://127.0.0.1:8772
+Press Ctrl+C to stop.
+INFO:     127.0.0.1:51871 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52190 - "POST /api/v1.1/tasks HTTP/1.1" 201 Created
+INFO:     127.0.0.1:52190 - "GET /api/v1.1/hardware/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52190 - "POST /api/v1.1/tasks/native-v12-staged-20260811-8/b0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52190 - "POST /api/v1.1/tasks/native-v12-staged-20260811-8/authorization HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54999 - "POST /api/v1.1/tasks/native-v12-staged-20260811-8/abort HTTP/1.1" 200 OK

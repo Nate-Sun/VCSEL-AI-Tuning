@@ -1,0 +1,23 @@
+:root {
+  color-scheme: dark;
+  --bg: #060b0d;
+  --bg-raised: #0a1114;
+  --panel: #0b1417;
+  --panel-bright: #101b1f;
+  --line: #203036;
+  --line-strong: #38505a;
+  --text: #d7e1df;
+  --text-strong: #f4f3ea;
+  --muted: #7c9094;
+  --mint: #b8f36b;
+  --mint-dim: #1d3522;
+  --amber: #e9ad56;
+  --amber-dim: #402f1b;
+  --red: #ff7777;
+  --red-dim: #421e22;
+  --blue: #79c7e3;
+  --cyan: #6ee7df;
+  --shadow: 0 18px 70px rgb(0 0 0 / 34%);
+  --radius: 12px;
+  font-family: "IBM Plex Mono", "Cascadia Mono", monospace;
+}

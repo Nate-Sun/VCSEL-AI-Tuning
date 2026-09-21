@@ -1,0 +1,22 @@
+mode: READ_ONLY
+api:
+  host: 127.0.0.1
+  port: 18820
+storage:
+  sqlite_path: C:/Users/NateS/Documents/VCSEL/.worktrees/v1.2-native-pilot-fast24-isolation/state/hardware-validation/native-20260810/platform-read-only-recheck2/campaigns.sqlite3
+  artifact_root: C:/Users/NateS/Documents/VCSEL/.worktrees/v1.2-native-pilot-fast24-isolation/artifacts/hw-v12-read-only-recheck2/platform
+b0_path: C:/Users/NateS/Documents/VCSEL/.worktrees/v1.2-native-pilot-fast24-isolation/configs/ai_tuning/b0.yaml
+measurement_timeout_s: 180.0
+cleanup_grace_s: 5.0
+worker_count: 1
+hardware:
+  driver_profile: C:/Users/NateS/Documents/VCSEL/.worktrees/v1.2-native-pilot-fast24-isolation/configs/hardware/vcsel_lab_live.yaml
+  dca_visa_resource: TCPIP0::Nate-Rog::hislip0,4880::INSTR
+  i2c_com_port: COM7
+  i2c_address: 0xA6
+  bert_host: 192.168.3.2
+  bert_port: 9000
+  resource_ids:
+    - DCA-N1010A-CHAN1A
+    - I2C-PHVD1124-COM7-0xA6
+    - BERT-192.168.3.2-PORT1-CH0
