@@ -9,6 +9,8 @@ Personal private repository containing versioned source snapshots and structured
 | V2.0 AI Brain | 软件基础框架，FAKE provider / Software foundation, FAKE provider | [V2.0](V2.0/README.md) |
 | V2.1 | 五个独立实验快照 / Five separate experimental snapshots | [V2.1](V2.1/README.md) |
 
+**接手先读 / Start here:** [接手指南 / Handoff guide](docs/HANDOFF_GUIDE.md)（做什么、选哪个版本、参数、术语、换工位、已知问题 / what it does, which version, parameters, glossary, bench changes, known issues）→ [结果总结 / Results](docs/RESULTS.md)（关键数字、测量噪声、失败记录、重复性测试步骤 / key numbers, noise, failures, repeatability test）。
+
 推荐阅读 / Read next: [版本与谱系 / Version lineage](docs/VERSIONS.md)、[安装使用 / Usage](docs/USAGE.md)、[数据范围 / Data scope](docs/DATA_SCOPE.md)、[验证与限制 / Verification](docs/VERIFICATION.md)。
 
 源码已展开在各版本的 `source/` 下。历史源码文档按原样保存；本次新增的交付说明均为中英文双语。`main` 是精简交付目录的分支，各源码的原始 branch/commit 另见版本清单，不能用本仓库 main 的提交号冒充实验时的源码提交。
